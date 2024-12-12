@@ -13,6 +13,9 @@ import PrivateRoute from './components/PrivateRoute';
 
 import { ConfigProvider } from 'antd';
 import Task from './pages/Task';
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
+import VerifyOtpPage from './pages/VerifyOtp';
 
 
 
@@ -20,9 +23,9 @@ import Task from './pages/Task';
 const App = () => {
   const theme = {
     token: {
-      colorPrimary: '#1DA57A', // Primary color
+      colorPrimary: '#2f80ed', // Primary color
       borderRadius: 8, // Global border radius
-      colorLink: '#1DA57A', // Link color
+      colorLink: '#2f80ed', // Link color
       fontSizeBase: '14px', // Base font size
       colorSuccess: '#52c41a', // Success color
       colorWarning: '#faad14', // Warning color
@@ -40,9 +43,11 @@ const App = () => {
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index path={path.HOME} element={<Home />} />
-              {/* <Route path={path.LOGIN} element={<LoginPage />} /> */}
               <Route  path={path.Task} element={<Task />} />
             </Route>
+            <Route path={path.LOGIN} element={<LoginPage />} />
+            <Route path={path.REGISTER} element={<RegisterPage />} />
+            <Route path={path.VERIFY_OTP} element={<VerifyOtpPage />} />
             <Route element={<PrivateRoute />}>
               {/* <Route path="/quan-ly" element={<Layout />}> */}
               {/* <Route path="" element={<PaymentPage />} /> */}
