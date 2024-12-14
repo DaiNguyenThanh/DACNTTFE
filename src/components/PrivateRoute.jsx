@@ -1,16 +1,17 @@
 import React from 'react';
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { path } from '../utils';
+import { Navigate } from 'react-router-dom';
 
-const PrivateRoute = () => {
-  const { isLoggedIn } = useAuth();
-  const location = useLocation();
+const PrivateRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('token') !== null; // Kiểm tra xem có token không
+  const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+  const role = user ? user.role : null; // Lấy role
 
-  return isLoggedIn ? (
-    <Outlet />
-  ) : (
-    <Navigate to={path.LOGIN} state={{ from: location }} replace />
+  return (
+    isAuthenticated && role === 'admin' ? (
+      children // Render children nếu là admin
+    ) : (
+      <Navigate to="/login" /> // Chuyển hướng đến trang đăng nhập nếu không phải admin
+    )
   );
 };
 

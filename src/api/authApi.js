@@ -77,53 +77,53 @@ export const axiosInstance = axios.create({
 });
 
 // Thêm interceptor để tự động thêm token vào header
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Thêm interceptor để xử lý response
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-
-//     // Nếu token hết hạn (status 401) và chưa thử refresh
-//     if (error.response.status === 401 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-
-//       try {
-//         // Gọi API refresh token (nếu bạn có)
-//         const response = await axios.post(`${API_URL}/auth/refresh-token`, {
-//           refreshToken: localStorage.getItem('refreshToken')
-//         });
-
-//         const { token } = response.data;
-//         localStorage.setItem('token', token);
-
-//         // Thử lại request ban đầu với token mới
-//         originalRequest.headers.Authorization = `Bearer ${token}`;
-//         return axiosInstance(originalRequest);
-//       } catch (refreshError) {
-//         // Nếu refresh token cũng hết hạn, logout user
-//         localStorage.removeItem('token');
-//         localStorage.removeItem('refreshToken');
-//         window.location.href = '/login';
-//         return Promise.reject(refreshError);
-//       }
+// axiosInstance.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem('token');
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
 //     }
-
+//     return config;
+//   },
+//   (error) => {
 //     return Promise.reject(error);
 //   }
-// ); 
+// );
+
+// Thêm interceptor để xử lý response
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Nếu token hết hạn (status 401) và chưa thử refresh
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Gọi API refresh token (nếu bạn có)
+        const response = await axios.post(`${API_URL}/auth/refresh-token`, {
+          refreshToken: localStorage.getItem('refreshToken')
+        });
+
+        const { token } = response.data;
+        localStorage.setItem('token', token);
+
+        // Thử lại request ban đầu với token mới
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        // Nếu refresh token cũng hết hạn, logout user
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+); 
 
 export const verifyOtpAPI = async ({ otp, email,is_verify_email
 }) => {

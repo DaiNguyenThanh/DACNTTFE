@@ -12,8 +12,10 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('token');
+       
         if (!token) {
-          navigate(path.Login);
+          navigate(path.LOGIN);
+         
           return;
         }
 

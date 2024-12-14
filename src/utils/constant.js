@@ -1,6 +1,7 @@
 
 export const path = {
     HOME: '/',
+        DASHBOARD:'/dashboard',
     LOGIN: '/login',
     REGISTER: '/register',
     VERIFY_OTP: '/verify-otp',
