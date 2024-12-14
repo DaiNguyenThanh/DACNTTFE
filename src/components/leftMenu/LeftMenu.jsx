@@ -11,8 +11,8 @@ import { Button, Layout, Menu, Divider, Avatar, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/imgaes/logoITTDTU.png';
 import { NavLink } from 'react-router-dom';
-import { path } from '../../utils';
 import './LeftMenu.css'
+import { path } from '../../utils';
 const { Sider } = Layout;
 const { Text } = Typography;
 
@@ -68,6 +68,7 @@ const LeftMenu = () => {
         };
 
         const menuItem = flattenMenuItems(menuItems).find(item => item.key === e.key);
+      
         if (menuItem?.target) {
             navigate(menuItem.target);
         }

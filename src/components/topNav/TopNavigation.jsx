@@ -23,18 +23,19 @@ const TopNavigation = () => {
     // Thêm các thông báo khác
   ]);
 
+
   // Menu cho Avatar
   const userMenu = (
     <Menu>
       <Menu.Item key="profile" icon={<UserOutlined />}>
-        Thông tin cá nhân
+       Profile
       </Menu.Item>
       <Menu.Item key="settings" icon={<SettingOutlined />}>
-        Cài đặt
+        Setting
       </Menu.Item>
       <Menu.Divider />
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={logout}>
-        Đăng xuất
+       Logout
       </Menu.Item>
     </Menu>
   );
