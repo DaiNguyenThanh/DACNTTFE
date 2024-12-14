@@ -1,89 +1,84 @@
-import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { loginAPI, verifyTokenAPI } from '../api/authApi';
-const AuthContext = createContext();
-
-const initialState = {
-  isLoggedIn: false,
-  user: null,
-  token: localStorage.getItem('token') || null
-};
-
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'LOGIN':
-      return {
-        ...state,
-        isLoggedIn: true,
-        user: action.payload.user,
-        token: action.payload.token
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        isLoggedIn: false,
-        user: null,
-        token: null
-      };
-    default:
-      return state;
-  }
-};
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { loginAPI, getUserInfoAPI } from '../api/authApi';
+import { path } from '../utils';
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-
-  // Kiểm tra token khi khởi động
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    const verifyToken = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await verifyTokenAPI(token);
-          dispatch({
-            type: 'LOGIN',
-            payload: { user: response.user, token }
-          });
-        } catch (error) {
-          localStorage.removeItem('token');
-          console.error('Verify token failed:', error.message);
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate(path.Login);
+          return;
         }
+
+        const userInfo = await getUserInfoAPI();
+        if (userInfo.success) {
+          setUser(userInfo.data.data);
+        } else {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+        navigate('/login');
       }
     };
-  
-    verifyToken();
-  }, []);
+
+    checkAuth();
+  }, [navigate]);
 
   const login = async (email, password) => {
-    try {
-      // Gọi API login của bạn
+    try {   
       const response = await loginAPI({ email, password });
-      localStorage.setItem('token', response.token);
       
-      dispatch({
-        type: 'LOGIN',
-        payload: { user: response.user, token: response.token }
-      });
-      return { success: true };
+      if (response.status=200) {
+        // Lưu token vào localStorage
+        localStorage.setItem('token', response.data.access_token);
+        // Gọi API lấy thông tin user
+        const userInfo = await getUserInfoAPI();
+        
+        if (userInfo.success) {
+          setUser(userInfo.data.data);
+          localStorage.setItem('user', JSON.stringify(userInfo.data.data));
+          return { success: true };
+        } else {
+          return { success: false, message: 'Failed to get user information' };
+        }
+      } else {
+        return { success: false, message: response.message };
+      }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Login error:', error);
+      return { success: false, message: error.message };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    dispatch({ type: 'LOGOUT' });
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate(path.LOGIN)
   };
 
   const value = {
-    ...state,
+    user,
     login,
-    logout
+    logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-// Custom hook để sử dụng auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

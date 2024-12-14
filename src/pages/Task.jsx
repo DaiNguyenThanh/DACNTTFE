@@ -1,7 +1,6 @@
 
 import React, { Component } from 'react'
 import Board from 'react-trello'
-import MainLayout from '../components/layout/MainLayout'
 import '../App.css'
 const data = require('../data.json')
 

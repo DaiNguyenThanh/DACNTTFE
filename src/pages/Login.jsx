@@ -1,88 +1,108 @@
-import React from "react";
-import { Form, Input, Button, message, Card, Typography } from "antd";
-import { useAuth } from "../contexts/AuthContext";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-
-const LoginPage = () => {
-  const { login } = useAuth();
+import React, { useState } from 'react';
+import { Form, Input, Button, message } from 'antd';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { path } from '../utils';
+import '../assets/css//Login.css';
+import backgroundImage from '../assets/imgaes/background.png'
+const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || "/";
+  const { login } = useAuth();
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
-    const { email, password } = values;
-    const result = await login(email, password);
+    try {
+      setLoading(true);
+      const { email, password } = values;
 
-    if (result.success) {
-      message.success("Đăng nhập thành công!");
-      navigate(from, { replace: true });
-    } else {
-      message.error("Đăng nhập thất bại: " + result.error);
+      if (!email || !password) {
+        message.error('Please fill in all fields!');
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        message.error('Invalid email format!');
+        return;
+      }
+
+      const result = await login(email, password);
+
+      if (result.success) {
+        message.success('Login successful!');
+        
+        form.resetFields();
+        
+        setTimeout(() => {
+          navigate(path.HOME);
+        }, 500);
+      } else {
+        message.error(result.message || 'Login failed!');
+      }
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      message.error(error.message || 'Login failed!');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Card
-      style={{
-        maxWidth: 400,
-        margin: "100px auto",
-        padding: "20px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-      }}
-    >
-      <h2
-        style={{
-          textAlign: "center",
-          color: "#2f80ed",
-        }}
-      >
-        Login
-      </h2>
-      <Form
-        name="login"
-        onFinish={onFinish}
-        layout="vertical"
-        style={{
-          marginTop: "20px",
-        }}
-      >
-        <Form.Item
-          label="Username"
-          name="email"
-          rules={[{ required: true, message: "Please input your username!" }]}
+    <div className="login-container" style={{backgroundImage: `url(${backgroundImage})`}}>
+      <div className="login-form">
+        <h2>Login</h2>
+        <p>Welcome back! Please login to your account.</p>
+        
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
         >
-          <Input />
-        </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please enter your email!' },
+              { type: 'email', message: 'Invalid email format!' }
+            ]}
+          >
+            <Input placeholder="Enter your email" />
+          </Form.Item>
 
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: "Please input your password!" }]}
-        >
-          <Input.Password />
-        </Form.Item>
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[
+              { required: true, message: 'Please enter your password!' },
+              { min: 6, message: 'Password must be at least 6 characters!' }
+            ]}
+          >
+            <Input.Password placeholder="Enter your password" />
+          </Form.Item>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit" block>
-            Login
-          </Button>
-        </Form.Item>
-      </Form>
-      <div
-        style={{
-          textAlign: "center",
-        }}
-      >
-        <Typography.Paragraph style={{ textAlign: "center" }}>
-          Forgot <Link to="/forgot-username">Username</Link>/
-          <Link to="/forgot-password">Password</Link> ?
-        </Typography.Paragraph>
-        <Typography.Paragraph style={{ textAlign: "center" }}>
-          Not registered? <Link to="/register">Create an account</Link>
-        </Typography.Paragraph>
+          <Form.Item>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              block
+              loading={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
+            </Button>
+          </Form.Item>
+
+          <div className="form-footer">
+            <Link to="/forgot-password">Forgot Password?</Link>
+            <div className="register-link">
+              Don't have an account? <Link to={path.REGISTER}>Register now</Link>
+            </div>
+          </div>
+        </Form>
       </div>
-    </Card>
+    </div>
   );
 };
 
-export default LoginPage;
+export default Login;
