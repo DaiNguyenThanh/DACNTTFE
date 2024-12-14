@@ -5,7 +5,7 @@ const PrivateRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token') !== null; // Kiểm tra xem có token không
   const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
   const role = user ? user.role : null; // Lấy role
-
+ 
   return (
     isAuthenticated && role === 'admin' ? (
       children // Render children nếu là admin
