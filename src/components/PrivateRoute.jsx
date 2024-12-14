@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { path,role } from '../utils';
 
 const PrivateRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token') !== null; // Kiểm tra xem có token không
@@ -7,7 +8,7 @@ const PrivateRoute = ({ children }) => {
   const role = user ? user.role : null; // Lấy role
  
   return (
-    isAuthenticated && role === 'admin' ? (
+    isAuthenticated && role == role.RoleAdmin ? (
       children // Render children nếu là admin
     ) : (
       <Navigate to="/login" /> // Chuyển hướng đến trang đăng nhập nếu không phải admin

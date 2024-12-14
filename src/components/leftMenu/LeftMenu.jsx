@@ -12,21 +12,30 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/imgaes/logoITTDTU.png';
 import { NavLink } from 'react-router-dom';
 import './LeftMenu.css'
-import { path } from '../../utils';
+import { path ,role} from '../../utils';
 const { Sider } = Layout;
 const { Text } = Typography;
-
+const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+const userRole = user ? user.role : null;
 const menuItems = [
     {
         key: '1',
         icon: <MailOutlined />,
-        label: "Trang chủ",
+        label: "Home",
         target: path.HOME
+      
     },
     {
         key: '2',
+        icon: <MailOutlined />,
+        label: "Dashboard",
+        target: path.HOME,
+        hidden:userRole!==role.RoleAdmin
+    },
+    {
+        key: '3',
         icon: <CalendarOutlined />,
-        label: 'Quản lý yêu câu',
+        label: 'Request',
         target: "/",
     },
     {
@@ -36,7 +45,7 @@ const menuItems = [
         target: path.Task,
         children: [
             {
-                key: '3',
+                key: '4',
                 label: 'Workspace 1',
                 target: path.Task
             },
@@ -50,7 +59,6 @@ const menuItems = [
     },
 
 ];
-
 const LeftMenu = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [selectedKeys, setSelectedKeys] = useState(['1']);
@@ -68,7 +76,7 @@ const LeftMenu = () => {
         };
 
         const menuItem = flattenMenuItems(menuItems).find(item => item.key === e.key);
-      
+
         if (menuItem?.target) {
             navigate(menuItem.target);
         }
@@ -92,7 +100,7 @@ const LeftMenu = () => {
                     openKeys={openKeys}
                     onOpenChange={onOpenChange}
                     onClick={handleMenuClick}
-                    items={menuItems}
+                    items={menuItems.filter(item => !item.hidden)}
                 />
                 {/* <Button
                     type="text"
