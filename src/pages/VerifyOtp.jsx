@@ -41,7 +41,7 @@ const VerifyOtpPage = () => {
   const handleResendOtp = async () => {
     try {
       setLoading(true);
-      const email = "daiqbn@gmail.com"//localStorage.getItem('tempEmail');
+      const email = localStorage.getItem('tempEmail');
      
       if (!email) {
         message.error("Email not found. Please register again.");

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import { loginAPI, getUserInfoAPI } from '../api/authApi';
 import { path } from '../utils';
 const AuthContext = createContext(null);
@@ -7,10 +7,14 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  
+  const location=useLocation();
   useEffect(() => {
     const checkAuth = async () => {
       try {
+       
+        if(location.pathname == path.REGISTER || location.pathname == path.VERIFY_OTP){
+          return;
+        }
         const token = localStorage.getItem('token');
        
         if (!token) {
@@ -33,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate,]);
 
   const login = async (email, password) => {
     try {   

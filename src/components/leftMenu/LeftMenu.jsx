@@ -5,68 +5,57 @@ import {
     MailOutlined,
     CalendarOutlined,
     AppstoreOutlined,
-    SettingOutlined,
-    HomeOutlined
+    SettingOutlined
 } from '@ant-design/icons';
 import { Button, Layout, Menu, Divider, Avatar, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/imgaes/logoITTDTU.png';
 import { NavLink } from 'react-router-dom';
 import './LeftMenu.css'
-import { path,role} from '../../utils';
+import { path } from '../../utils';
 const { Sider } = Layout;
 const { Text } = Typography;
+
+const menuItems = [
+    {
+        key: '1',
+        icon: <MailOutlined />,
+        label: "Trang chủ",
+        target: path.HOME
+    },
+    {
+        key: '2',
+        icon: <CalendarOutlined />,
+        label: 'Quản lý yêu câu',
+        target: "/",
+    },
+    {
+        key: 'sub1',
+        label: 'Workspace',
+        icon: <AppstoreOutlined />,
+        target: path.Task,
+        children: [
+            {
+                key: '3',
+                label: 'Workspace 1',
+                target: path.Task
+            },
+            {
+                key: '4',
+                label: 'Workspace 2',
+                target: path.Task
+            },
+
+        ],
+    },
+
+];
 
 const LeftMenu = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [selectedKeys, setSelectedKeys] = useState(['1']);
     const [openKeys, setOpenKeys] = useState(['sub1']);
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
-    const userRole = user ? user.role : null; // Lấy role
-    const menuItems = [
-        {
-            key: '1',
-            icon: <HomeOutlined />,
-            label: "Home",
-            target: path.HOME
-           
-        },
-        
-        {
-            key: '2',
-            icon: <SettingOutlined />,
-            label: "Dashboard",
-            target: path.DASHBOARD,
-            hidden: userRole !== role.RoleAdmin,
-        },
-        {
-            key: '3',
-            icon: <CalendarOutlined />,
-            label: 'Request',
-            target: "/",
-        },
-        {
-            key: 'sub1',
-            label: 'Workspace',
-            icon: <AppstoreOutlined />,
-            target: path.Task,
-            children: [
-                {
-                    key: '4',
-                    label: 'Workspace 1',
-                    target: path.Task
-                },
-                {
-                    key: '5',
-                    label: 'Workspace 2',
-                    target: path.Task
-                },
-
-            ],
-        },
-
-    ];
 
     const handleMenuClick = (e) => {
         setSelectedKeys([e.key]);
@@ -103,7 +92,7 @@ const LeftMenu = () => {
                     openKeys={openKeys}
                     onOpenChange={onOpenChange}
                     onClick={handleMenuClick}
-                    items={menuItems.filter(item=>!item.hidden)}
+                    items={menuItems}
                 />
                 {/* <Button
                     type="text"
