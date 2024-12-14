@@ -32,18 +32,18 @@ const App = () => {
         <ConfigProvider theme={theme}>
           <Routes>
             <Route path="/" element={<MainLayout />}>
+              <Route index path={path.Task} element={<Task />} />
+              <Route  path={path.DASHBOARD} element={<PrivateRoute element={<Home />} />} />
               <Route index path={path.HOME} element={<Home />} />
-              <Route path={path.Task} element={<Task />} />
             </Route>
-          
+
             <Route path={path.LOGIN} element={<LoginPage />} />
             <Route path={path.REGISTER} element={<RegisterPage />} />
             <Route path={path.VERIFY_OTP} element={<VerifyOtpPage />} />
-            <Route element={<PrivateRoute />}>
-            </Route>
+
           </Routes>
         </ConfigProvider>
-        </AuthProvider>
+      </AuthProvider>
     </Router>
   );
 };
