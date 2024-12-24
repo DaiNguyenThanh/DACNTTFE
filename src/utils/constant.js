@@ -6,7 +6,8 @@ export const path = {
     REGISTER: '/register',
     VERIFY_OTP: '/verify-otp',
     FORGOT_PASSWORD: '/forgot-password',
-    Task: '/task'  // Thêm path cho Task
+    Task: '/task'  ,
+    CONFIGRRATION:'/configration'
 }
 export const role = {
     RoleAdmin: 'admin',
