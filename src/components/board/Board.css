@@ -1,0 +1,43 @@
+.App {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.App-header {
+    background-color: #282c34;
+    padding: 20px;
+    color: white;
+}
+
+.App-intro {
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+}
+
+.lane {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 0 10px;
+    padding: 10px;
+    width: 300px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin: 5px 0;
+    padding: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.card:hover {
+    background-color: #f9f9f9;
+}

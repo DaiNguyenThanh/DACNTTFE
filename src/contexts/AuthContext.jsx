@@ -1,54 +1,62 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate,useLocation } from 'react-router-dom';
-import { loginAPI, getUserInfoAPI } from '../api/authApi';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { loginAPI, getUserInfoAPI, sendOtpAPI } from '../api/authApi';
 import { path } from '../utils';
+import { message } from 'antd';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const location=useLocation();
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-       
-        if(location.pathname == path.REGISTER || location.pathname == path.VERIFY_OTP){
-          return;
-        }
-        const token = localStorage.getItem('token');
-       
-        if (!token) {
-          navigate(path.LOGIN);
-         
-          return;
-        }
+  const location = useLocation();
+  // useEffect(async () => {
+  //   const checkAuth = async () => {
+  //     try {
 
-        const userInfo = await getUserInfoAPI();
-        if (userInfo.success) {
-          setUser(userInfo.data.data);
-        } else {
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
-      } catch (error) {
-        localStorage.removeItem('token');
-        navigate('/login');
-      }
-    };
+  //       if (location.pathname == path.REGISTER || location.pathname == path.VERIFY_OTP) {
+  //         return;
+  //       }
+  //       const token = localStorage.getItem('token');
 
-    checkAuth();
-  }, [navigate,]);
+  //       if (!token) {
+  //         navigate(path.LOGIN);
+
+  //         return;
+  //       }
+
+  //       const userInfo = await getUserInfoAPI();
+  //       if (userInfo.success) {
+  //         setUser(userInfo.data.data);
+  //         // if (userInfo.data.data.verified == false) {
+  //         //   const otpResult = await sendOtpAPI({ email: user.email });
+  //         //   localStorage.setItem('tempEmail', user.email)
+  //         //   message.success('Account inactive, Please vertify.');
+
+  //         //   navigate(path.VERIFY_OTP);
+  //         // }
+  //       } else {
+  //         localStorage.removeItem('token');
+  //         navigate(path.LOGIN);
+  //       }
+  //     } catch (error) {
+  //       localStorage.removeItem('token');
+  //       navigate(path.LOGIN);
+  //     }
+  //   };
+
+  //   checkAuth();
+  // }, [navigate,]);
 
   const login = async (email, password) => {
-    try {   
+    try {
       const response = await loginAPI({ email, password });
-      
-      if (response.status=200) {
+
+      if (response.status = 200) {
         // Lưu token vào localStorage
         localStorage.setItem('token', response.data.access_token);
         // Gọi API lấy thông tin user
         const userInfo = await getUserInfoAPI();
-        
+
         if (userInfo.success) {
           setUser(userInfo.data.data);
           localStorage.setItem('user', JSON.stringify(userInfo.data.data));

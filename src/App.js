@@ -10,7 +10,8 @@ import Home from './pages/Home';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
 import VerifyOtpPage from './pages/VerifyOtp';
-
+import Configration from './pages/Configration'
+import './App.css'
 const App = () => {
   const theme = {
     token: {
@@ -32,9 +33,10 @@ const App = () => {
         <ConfigProvider theme={theme}>
           <Routes>
             <Route path="/" element={<MainLayout />}>
-              <Route index path={path.Task} element={<Task />} />
+              <Route  path={path.Task} element={<Task />} />
               <Route  path={path.DASHBOARD} element={<PrivateRoute element={<Home />} />} />
               <Route index path={path.HOME} element={<Home />} />
+              <Route  path={path.CONFIGRRATION} element={<Configration />} />
             </Route>
 
             <Route path={path.LOGIN} element={<LoginPage />} />

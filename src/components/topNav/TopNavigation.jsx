@@ -99,7 +99,7 @@ const TopNavigation = () => {
                 icon={<UserOutlined />}
                 style={{ cursor: 'pointer' }}
               />
-              <span className="user-name">{user?.name || 'Dai nguyen'}</span>
+              <span className="user-name">{user?.name}</span>
             </Space>
           </Dropdown>
         </Space>
