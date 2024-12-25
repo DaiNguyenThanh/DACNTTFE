@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
@@ -6,12 +6,7 @@ export const GetUserAPI = async ({ id }) => {
     try {
        
         const response = await axios.get(`${API_URL}/admin/users`,
-            {
-                headers: {
-                    "ngrok-skip-browser-warning": 1,
-                    Authorization: `Bearer ${token}`,
-                }
-            });
+           );
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -37,12 +32,7 @@ export const updateUserAPI = async ({ id, email, name, role, subject_id }) => {
             subject:{
                 id:subject_id
             }
-        }, {
-            headers: {
-                "ngrok-skip-browser-warning": 1,
-                Authorization: `Bearer ${token}`,
-            }
-        });
+        } );
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -61,11 +51,6 @@ export const patchUserAPI = async ({ id, field }) => {
     try {
         const response = await axios.patch(`${API_URL}/admin/users/${id}`, {
             [field.key]: field.value
-        }, {
-            headers: {
-                "ngrok-skip-browser-warning": 1,
-                Authorization: `Bearer ${token}`,
-            }
         });
         return response.data;
     } catch (error) {
