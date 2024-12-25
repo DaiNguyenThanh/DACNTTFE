@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
@@ -8,12 +8,7 @@ export const CreateSubjectAPI = async ({ id, name }) => {
         const response = await axios.post(`${API_URL}/subjects`, {
             id: id,
             name: name
-        }, {
-            headers: {
-                "ngrok-skip-browser-warning": 1,
-                Authorization: `Bearer ${token}`,
-            }
-        });
+        }, );
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -34,11 +29,6 @@ export const UpdateSubjectAPI = async ({ id, name }) => {
         const response = await axios.put(`${API_URL}/subjects`, {
             id: id,
             name: name
-        }, {
-            headers: {
-                "ngrok-skip-browser-warning": 1,
-                Authorization: `Bearer ${token}`,
-            }
         });
         return response.data;
     } catch (error) {
@@ -76,12 +66,7 @@ export const DeleteSubjectAPI = async (ids) => {
 };
 export const GetAllSubjectAPI = async () => {
     try {
-        const response = await axios.get(`${API_URL}/subjects/all`, {
-            headers: {
-                "ngrok-skip-browser-warning": 1,
-                Authorization: `Bearer ${token}`,
-            }
-        }
+        const response = await axios.get(`${API_URL}/subjects/all`
         );
         return response.data;
     } catch (error) {
@@ -97,12 +82,7 @@ export const GetAllSubjectAPI = async () => {
 
 export const GetSubjectAPI = async ({ id }) => {
     try {
-        const response = await axios.get(`${API_URL}/subjects/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "ngrok-skip-browser-warning": 1
-            }
-        }
+        const response = await axios.get(`${API_URL}/subjects/${id}`,
         );
         return response.data;
     } catch (error) {
