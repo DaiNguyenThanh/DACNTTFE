@@ -64,7 +64,7 @@ const Register = () => {
       });
       console.log(result)
 
-      if (result.status = 200) {
+      if (result.status == 200) {
         const otpResult = await sendOtpAPI({ email });
         localStorage.setItem('tempEmail', email)
         message.success('Registration successful! Please vertify.');

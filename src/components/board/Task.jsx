@@ -1,7 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { Draggable } from "react-beautiful-dnd";
-
+import { Badge, Col, Row,Typography } from 'antd';
+const {Text}=Typography
 const Container = styled("div")`
   border: 1px solid lightgrey;
   margin-bottom: 8px;
@@ -20,7 +21,22 @@ const Task = ({ task, index }) => {
           {...provided.draggableProps}
           isDragging={snapshot.isDragging}
         >
-          {task.content}
+          <Row justify="space-between">
+            <Col >
+              <div>{task.title}</div>
+              <Text type="secondary">{task.deadline}</Text>
+            </Col>
+            <Col >
+
+              <Badge
+                count={task.priority}
+                style={{ backgroundColor: task.priority === 'high' ? '#f5222d' : task.priority === 'medium' ? '#faad14' : '#52c41a' }}
+              />
+            </Col>
+          </Row>
+
+        
+
         </Container>
       )}
     </Draggable>
