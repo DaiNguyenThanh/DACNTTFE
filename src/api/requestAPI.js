@@ -1,19 +1,20 @@
 import axios from './axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
-const token = localStorage.getItem('token');
 
 
-export const CreateWorkSpace = async ({  name, stages,subject_ids,user_ids }) => {
-   
+export const CreateRequest = async ({ attachment_ids, deadline,reason,task_id,type,workspace_id }) => {
     try {
-        const response = await axios.post(`${API_URL}/workspaces`, {
-            name: name,
-            stages:stages,
-            subject_ids:subject_ids,
-            user_ids:user_ids
-        });
+      
 
+        const response = await axios.post(`${API_URL}/requests`, {
+            attachment_ids:attachment_ids,
+            deadline:deadline,
+            reason:reason,
+            task_id:task_id,
+            type:type,
+            workspace_id:workspace_id
+        });
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -26,13 +27,13 @@ export const CreateWorkSpace = async ({  name, stages,subject_ids,user_ids }) =>
     }
 }
 
-export const GetAllWorkSpaces = async () => {
+export const GetAllRequest = async () => {
     try {
-        const response = await axios.get(`${API_URL}/workspaces/all`);
+        const response = await axios.get(`${API_URL}/requests/all`);
         return response.data;
     } catch (error) {
         if (error.response) {
-            throw new Error(error.response.data.message || 'Get all workspaces failed');
+            throw new Error(error.response.data.message || 'Get all failed');
         } else if (error.request) {
             throw new Error('Cannot connect to server');
         } else {
@@ -41,25 +42,12 @@ export const GetAllWorkSpaces = async () => {
     }
 }
 
-export const GetWorkSpace = async (id) => {
-    try {
-        const response = await axios.get(`${API_URL}/workspaces/${id}`);
-        return response.data;
-    } catch (error) {
-        if (error.response) {
-            throw new Error(error.response.data.message || 'Get workspace failed');
-        } else if (error.request) {
-            throw new Error('Cannot connect to server');
-        } else {
-            throw new Error('An error occurred');
-        }
-    }
-}
 
-export const UpdateWorkSpace = async ({ id, name }) => {
+export const UpdateRequest = async ({ id,reason}) => {
     try {
-        const response = await axios.put(`${API_URL}/workspaces/${id}`, {
-            name: name
+        const response = await axios.put(`${API_URL}/requests/${id}`, {
+           id:id,
+           path:reason
         });
         return response.data;
     } catch (error) {
@@ -73,9 +61,9 @@ export const UpdateWorkSpace = async ({ id, name }) => {
     }
 }
 
-export const DeleteWorkSpace = async (ids) => {
+export const DeleteRequest = async (ids) => {
     try {
-        const response = await axios.delete(`${API_URL}/workspaces`, {
+        const response = await axios.delete(`${API_URL}/requests`, {
             data: { ids }
         });
         return response.data;
@@ -89,9 +77,9 @@ export const DeleteWorkSpace = async (ids) => {
         }
     }
 }
-export const GetWorkspaceDetailAPI= async(id)=>{
+export const GetRequest= async(id)=>{
     try {
-        const response = await axios.get(`${API_URL}/workspaces/${id}`);
+        const response = await axios.get(`${API_URL}/requests/${id}`);
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -103,3 +91,21 @@ export const GetWorkspaceDetailAPI= async(id)=>{
         }
     }
 }
+export const ConfirmRequest= async(id, { reason, status }) => {
+    try {
+        const response = await axios.patch(`${API_URL}/requests/${id}/confirm`, {
+            reason: reason,
+            status: status
+        });
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Get failed');
+        } else if (error.request) {
+            throw new Error('Cannot connect to server');
+        } else {
+            throw new Error('An error occurred');
+        }
+    }
+}
+

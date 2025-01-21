@@ -2,7 +2,7 @@ import axios from './axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
-export const GetUserAPI = async ({ id }) => {
+export const GetUserAPI = async () => {
     try {
        
         const response = await axios.get(`${API_URL}/admin/users`,
