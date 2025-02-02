@@ -4,10 +4,13 @@ import { GetAllSubjectAPI, CreateSubjectAPI, UpdateSubjectAPI, DeleteSubjectAPI 
 import {  DeleteUserAPI, updateUserAPI, GetUserAPI } from '../api/adminUsers';
 import {
     DeleteOutlined,
-    MenuUnfoldOutlined
-    
+    MenuUnfoldOutlined,
+    EditOutlined
 } from '@ant-design/icons';
+import { useAuth } from '../contexts/AuthContext';
+import { path, role } from '../utils';
 
+import { useNavigate } from 'react-router-dom'; 
 
 const { TabPane } = Tabs;
 
@@ -20,8 +23,13 @@ const Configration = () => {
     const [isUserModalVisible, setIsUserModalVisible] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [userForm] = Form.useForm();
-   
-
+    const navigate = useNavigate();
+   const { user}= useAuth()
+   useEffect(() => {
+    if(user?.role!== role.RoleAdmin){
+        navigate(path.ERROR)
+    }
+   },[user,navigate]);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -133,9 +141,22 @@ const Configration = () => {
             key: 'action',
             render: (_, record) => (
                 <span>
-                    <Button onClick={() => handleEdit(record.id)}>Edit</Button>
+                    <Button 
+                        type="primary"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEdit(record.id)}
+                        style={{ marginRight: 8 }}
+                    >
+                        Edit
+                    </Button>
                     <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDelete(record.id)}>
-                        <Button type="link">Delete</Button>
+                        <Button 
+                            type="link" 
+                            icon={<DeleteOutlined />}
+                            style={{ color: '#ff4d4f' }}
+                        >
+                            Delete
+                        </Button>
                     </Popconfirm>
                 </span>
             ),
@@ -216,9 +237,22 @@ const Configration = () => {
             key: 'action',
             render: (_, record) => (
                 <span>
-                    <Button onClick={() => handleEditUser(record.id)}>Edit</Button>
+                    <Button 
+                        type="primary"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEditUser(record.id)}
+                        style={{ marginRight: 8 }}
+                    >
+                        Edit
+                    </Button>
                     <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDeleteUser(record.id)}>
-                        <Button icons="DeleteOutlined">Delete</Button>
+                        <Button 
+                            type="link" 
+                            icon={<DeleteOutlined />}
+                            style={{ color: '#ff4d4f' }}
+                        >
+                            Delete
+                        </Button>
                     </Popconfirm>
                 </span>
             ),
@@ -237,13 +271,26 @@ const Configration = () => {
     };
 
     return (
-        <div style={{ margin: 40, padding: 50, backgroundColor: '#ffffff', borderRadius: 8 }}>
+        <div style={{ 
+            margin: 20, 
+            paddingRight: 50, 
+            paddingLeft: 50, 
+            backgroundColor: '#ffffff', 
+            borderRadius: 8, 
+            //maxHeight: 'calc(100% - 84px)',
+            overflowY: 'auto'
+        }}>
             <Tabs defaultActiveKey="1">
                 <TabPane tab="Subject" key="1">
                     <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
                         Add Subject
                     </Button>
-                    <Table dataSource={dataSource} columns={columns} />
+                    <Table 
+                        dataSource={dataSource} 
+                        columns={columns} 
+                       
+                        scroll={{ y: 600 }}
+                    />
                     <Modal title={currentItem ? "Edit Subject" : "Add Subject"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
                         <Form form={form} layout="vertical">
                             <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please input the name!' }]}>

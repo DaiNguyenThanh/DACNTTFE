@@ -7,12 +7,13 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import KanbanBoard from '../components/board/Board';
-
+import { useWorkspace } from "../contexts/WorkspaceProvider";
 // ... existing code ...
 
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isHistoryDrawerVisible, setIsHistoryDrawerVisible] = useState(false);
+  const { selectedWorkspace }=useWorkspace()
   //const[trackingHistory,setTrackingHistory]=useState([])
   const [filters, setFilters] = useState({
     noMember: false,
@@ -151,7 +152,7 @@ const columns = [
       <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16, backgroundColor: '#ffffff3d' }}>
         <Col style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
 
-          <h3>Workspace Name</h3>
+          <h3>{selectedWorkspace}</h3>
           <Button type="secondary" shape="circle" icon={<StarOutlined />} />
 
 

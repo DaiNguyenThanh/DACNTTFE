@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Card, Tabs, Input, DatePicker, Button, Row, Col, Modal, Form, Badge, Upload, Select,Popconfirm } from 'antd';
+import { Table, Card, Tabs, Input, DatePicker, Button, Row, Col, Modal, Form, Badge, Upload, Select,Popconfirm,message } from 'antd';
 import moment from 'moment';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
@@ -8,39 +8,13 @@ import { CreateRequest } from '../api/requestAPI';
 import { useWorkspace } from '../contexts/WorkspaceProvider';
 import { GetAllWorkSpaces, GetWorkspaceDetailAPI } from '../api/workspaceApi';
 import { GetAllTasks } from '../api/TaskApi';
-import { GetAllRequest, GetRequest,ConfirmRequest } from '../api/requestAPI';
+import { GetAllRequest, GetRequest,ConfirmRequest ,DeleteRequest } from '../api/requestAPI';
 
 import TextArea from 'antd/es/input/TextArea';
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-
-const dataSource = [
-    {
-        key: '1',
-        title: 'Request 1 - To Do Something',
-        type: 'Type 1',
-        note: 'Note 1',
-        approver: 'Đại Nguyễn',
-        date: '04/01/2025 09:22',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        approvalProcess: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        status: 'Pending',
-    },
-    {
-        key: '2',
-        title: 'Request 2 - To Do Something Else',
-        type: 'Type 2',
-        note: 'Note 2',
-        approver: 'Nguyễn Văn A',
-        date: '04/01/2025 10:00',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        approvalProcess: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        status: 'Approved',
-    },
-    // Thêm các item khác nếu cần
-];
 
 const RequestPage = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
@@ -74,16 +48,16 @@ const RequestPage = () => {
 
         fetchWorkspaces();
     }, []);
-
+    const fetchRequests = async () => {
+        try {
+            const data = await GetAllRequest();
+            setRequests(data.data);
+        } catch (error) {
+            console.error('Error fetching requests:', error.message);
+        }
+    };
     useEffect(() => {
-        const fetchRequests = async () => {
-            try {
-                const data = await GetAllRequest();
-                setRequests(data.data);
-            } catch (error) {
-                console.error('Error fetching requests:', error.message);
-            }
-        };
+      
 
         fetchRequests();
     }, []);
@@ -155,7 +129,7 @@ const RequestPage = () => {
             title: 'status',
             dataIndex: 'status',
             render: (text) => (
-                <Badge count={text} style={{ backgroundColor: text === 'Declined' ? '#f5222d' : text === 'pending' ? '#faad14' : '#52c41a' }} />
+                <Badge count={text} style={{ backgroundColor: text === 'rejected' ? '#f5222d' : text === 'pending' ? '#faad14' : '#52c41a' }} />
             ),
         },
         {
@@ -173,6 +147,7 @@ const RequestPage = () => {
             const values = await form.validateFields();
             await handleSubmit(values);
             setIsModalVisible(false);
+
         } catch (error) {
             console.error('Validation failed:', error);
         }
@@ -196,7 +171,10 @@ const RequestPage = () => {
 
             console.log('Request created successfully:', requestResponse);
             setRequests(prevRequests => [...prevRequests, requestResponse.data]);
-            console.log(Request)
+            if(requestResponse.message=="Success"){
+                fetchRequests()
+                message.success("Request created successfully!")
+            }
         } catch (error) {
             console.error('Error creating request:', error.message);
         }
@@ -212,28 +190,38 @@ const RequestPage = () => {
             const detail= await GetRequest(requestId)
             setRequestDetail(detail.data)
             console.log(`Request ${requestId} approved.`);
+            if(response.message=="Success"){
+                fetchRequests()
+                message.success(`Request ${requestId} approved.`)
+            }
         } catch (error) {
             console.error('Error approving request:', error.message);
         }
     };
 
-    const handleDecline = async (requestId) => {
+    const handleReject = async (requestId) => {
         try {
             // Gọi API để từ chối yêu cầu
-            // Ví dụ: await DeclineRequest(requestId);
+            // Ví dụ: await RejectRequest(requestId);
             const reason=" "
             const status="rejected"
             const  response= await ConfirmRequest(requestId,{reason, status})
-            console.log(`Request ${requestId} declined.`);
+            
+            if(response.message=="Success"){
+                fetchRequests()
+                message.success(`Request ${requestId} Rejected.`)
+            }
         } catch (error) {
             console.error('Error declining request:', error.message);
         }
     };
     const handleDelete = async (requestId) => {
         try {
-            // Gọi API để từ chối yêu cầu
-            // Ví dụ: await DeclineRequest(requestId);
-            console.log(`Request ${requestId} declined.`);
+            const response= await DeleteRequest([requestId])
+            if(response.message=="Success"){
+                fetchRequests()
+                message.success('successfully Deleted! ');
+            }
         } catch (error) {
             console.error('Error declining request:', error.message);
         }
@@ -264,7 +252,7 @@ const RequestPage = () => {
                     <TabPane tab="All" key="all" />
                     <TabPane tab="Pending" key="pending" />
                     <TabPane tab="Approved" key="approved" />
-                    <TabPane tab="Declined" key="declined" />
+                    <TabPane tab="Rejected" key="rejected" />
                 </Tabs>
                 <Table
                     dataSource={filteredDataSource}
@@ -280,7 +268,7 @@ const RequestPage = () => {
                             <p><strong>Type:</strong> {requestDetail.type}</p>
                             <p><strong>Reason:</strong> {requestDetail.reason}</p>
                             <p><strong>Created by:</strong> {requestDetail.user.name}</p>
-                            <p><strong>Status:</strong> { <Badge count={requestDetail.status} style={{ backgroundColor: requestDetail.status === 'Declined' ? '#f5222d' : requestDetail.status === 'pending' ? '#faad14' : '#52c41a' }} />}</p>
+                            <p><strong>Status:</strong> { <Badge count={requestDetail.status} style={{ backgroundColor: requestDetail.status === 'rejected' ? '#f5222d' : requestDetail.status === 'pending' ? '#faad14' : '#52c41a' }} />}</p>
                             <p><strong>Created At:</strong> {moment(requestDetail.created_at).format('DD/MM/YYYY HH:mm')}</p>
                             {/* Thêm các trường khác nếu cần */}
                             <Row style={{ marginTop: '16px' }}>
@@ -288,7 +276,7 @@ const RequestPage = () => {
                                     <Button type='primary' onClick={() => handleApprove(requestDetail.id)} style={{ marginRight: '8px' }}>Approval</Button>
                                 )}
                                 {requestDetail.can_reject && (
-                                    <Button danger type='primary' onClick={() => handleDecline(requestDetail.id)} style={{ marginRight: '8px' }}>Decline</Button>
+                                    <Button danger type='primary' onClick={() => handleReject(requestDetail.id)} style={{ marginRight: '8px' }}>Reject</Button>
                                 )}
                                 {requestDetail.can_delete && (
                                     <Popconfirm
@@ -297,7 +285,7 @@ const RequestPage = () => {
                                     okText="Yes"
                                     cancelText="No"
                                 >
-                                    <Button danger onClick={() => handleDelete(requestDetail.id)}>Delete</Button>
+                                    <Button danger >Delete</Button>
                                     </Popconfirm>
                                 )}
                             </Row>
@@ -310,7 +298,7 @@ const RequestPage = () => {
                     </Card>
                 )}
             </div>
-            <Modal title="Add New Request" visible={isModalVisible} onOk={handleOk} onCancel={() => setIsModalVisible(false)} width={800}>
+            <Modal title="Add New Request" visible={isModalVisible} onOk={handleOk} onCancel={() => setIsModalVisible(false)} width={600}>
                 <Form form={form} layout="vertical">
                     <Form.Item label="Type" name="type" rules={[{ required: true, message: 'Please select a type!' }]}>
                         <Select placeholder="Select a type">
@@ -343,7 +331,7 @@ const RequestPage = () => {
                         <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
                     <Form.Item label="Reason" name="note">
-                        <Input editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
+                        <Input.TextArea  editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
                     </Form.Item>
                     {/* <Form.Item label="Reason" name="reason">
                         <Editor editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />

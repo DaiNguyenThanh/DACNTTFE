@@ -13,7 +13,8 @@ import {
     EllipsisOutlined,
     UpOutlined,
     DownOutlined,
-    DeleteOutlined
+    DeleteOutlined,
+    EditOutlined
 } from '@ant-design/icons';
 import { Button, Layout, Menu, Divider, Avatar, Typography, Modal, Form, Input, Select, Dropdown, Popconfirm, Radio, message, Checkbox, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -28,11 +29,11 @@ import { CreateWorkSpace, DeleteWorkSpace, GetWorkspaceDetailAPI } from '../../a
 import { GetAllWorkSpaces } from '../../api/workspaceApi'; // Import API để lấy danh sách workspace
 import { useWorkspace } from '../../contexts/WorkspaceProvider'; // Nhập useWorkspace
 import styled from 'styled-components'; // Đảm bảo bạn đã import styled-components
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Sider } = Layout;
 const { Text } = Typography;
-const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
-const userRole = user ? user.role : null;
+
 
 const WorkspaceContainer = styled.div`
     display: flex;
@@ -65,7 +66,10 @@ const LeftMenu = () => {
     const { setSelectedWorkspace } = useWorkspace(); // Sử dụng useWorkspace để lấy setSelectedWorkspace
     const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Thêm state cho modal chỉnh sửa
     const [editingWorkspace, setEditingWorkspace] = useState(null); // Thêm state để lưu workspace đang chỉnh sửa
-
+    const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+    // Lấy thông tin người dùng từ localStorage
+    
+    const userRole = user ? user.role : null;
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
@@ -213,7 +217,16 @@ const LeftMenu = () => {
             if (response.error_code === 0) {
                 message.success('Workspace deleted successfully!'); // Hiển thị thông báo thành công
                 // Cập nhật lại danh sách workspace sau khi xóa
-                setworkspaceList(prevList => prevList.filter(workspace => workspace.id !== workspaceId));
+                setworkspaceList(prevList => {
+                    const updatedList = prevList.filter(workspace => workspace.id !== workspaceId);
+                    // Nếu danh sách workspace còn lại không rỗng, điều hướng về workspace đầu tiên
+                    if (updatedList.length > 0) {
+                        navigate(`/workspace/${updatedList[0].id}`); // Điều hướng về workspace đầu tiên
+                    } else {
+                        navigate('/'); // Nếu không còn workspace nào, điều hướng về trang chính
+                    }
+                    return updatedList;
+                });
             } else {
                 message.error(response.message || 'An error occurred while deleting the workspace.'); // Hiển thị thông báo lỗi
             }
@@ -262,19 +275,27 @@ const LeftMenu = () => {
                     label: (
                         <WorkspaceContainer>
                             <WorkspaceName>{workspace.name}</WorkspaceName>
-                            <Dropdown overlay={
-                                <Menu>
-                                    <Menu.Item onClick={() => showEditModal(workspace)}>Edit</Menu.Item>
-                                    <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDeleteWorkspace(workspace.id)}>
-                                        <Button type="link">Delete</Button>
-                                    </Popconfirm>
-                                </Menu>
-                            } overlayStyle={{ zIndex: 9999 }}>
+                            <Dropdown
+                                overlay={
+                                    <Menu>
+                                        <Menu.Item icon={<EditOutlined style={{ color: '#1890ff' }} />} onClick={() => showEditModal(workspace)}>
+                                            
+                                            <Button type="link" >Edit</Button>
+                                        </Menu.Item>
+                                        <Menu.Item icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}>
+                                            <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDeleteWorkspace(workspace.id)}>
+                                                <Button type="link" danger>Delete</Button>
+                                            </Popconfirm>
+                                        </Menu.Item>
+                                    </Menu>
+                                }
+                                overlayStyle={{ zIndex: 9999 }}
+                            >
                                 <Button type="text">...</Button>
                             </Dropdown>
                         </WorkspaceContainer>
                     ),
-                    target: path.WORKSPACE // Giả sử bạn có một đường dẫn cho mỗi workspace
+                    target: path.WORKSPACE + `/`+workspace.id
                 }))
 
             ],
@@ -493,12 +514,12 @@ const LeftMenu = () => {
                         </Form.Item>
                     </Form>
                 </Modal>
-                <Button
+                {/* <Button
                     type="text"
                     icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                     onClick={() => setCollapsed(!collapsed)}
                     className="sticky top-60 left-64 z-10 text-xl w-15 rounded-full bg-white shadow-sm"
-                />
+                /> */}
             </Sider>
         </div>
 
