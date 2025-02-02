@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
+import { useParams } from 'react-router-dom';
+
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import moment from "moment";
@@ -23,16 +25,16 @@ const Container = styled("div")`
 const App = ({ filters }) => {
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
-  const { selectedWorkspace } = useWorkspace();
   const { addTaskForm } = useForm();
   const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
+  const { workspaceId } = useParams();
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
-      if (!selectedWorkspace) return;
+      if (!workspaceId) return;
       setIsLoading(true);
 
       try {
-        const response = await GetWorkspaceDetailAPI(selectedWorkspace);
+        const response = await GetWorkspaceDetailAPI(workspaceId);
         const stages = response.data.stages || [];
         const deadline_from =moment().format("DD/MM/YYYY")
         const deadline_to = moment().format("DD/MM/YYYY")
@@ -68,7 +70,6 @@ const App = ({ filters }) => {
         const tasks = {};
         const columns = {};
         const columnOrder = [];
-        console.log("rjiewor", allTasks)
         stages.forEach((stage, index) => {
           const stageTasks = allTasks[index].data;
           // Gắn tasks vào object tasks
@@ -81,8 +82,6 @@ const App = ({ filters }) => {
             id: stage.id,
             title: stage.name,
             taskIds: stageTasks.map((task) => task.id), // Lưu trữ taskIds cho từng column
-
-
 
           };
 
@@ -99,7 +98,7 @@ const App = ({ filters }) => {
     };
 
     fetchWorkspaceDetails();
-  }, [selectedWorkspace, noDates, dueNextDay,low,medium,high]);
+  }, [workspaceId, noDates, dueNextDay,low,medium,high]);
 
   const onDragEnd = useCallback(async ({ destination, source, draggableId, type }) => {
     if (!destination) return;

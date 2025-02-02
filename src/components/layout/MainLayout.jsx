@@ -10,16 +10,16 @@ const App = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   return (
-    <Layout style={{height:"100vh"}}>
+    <Layout style={{ height: "100vh" }}>
       {/* Header */}
       <LeftMenu />
-
+      
       {/* Body */}
       <Layout>
         <TopNavigation />
         <Layout>
           <Content
-          
+
           >
             <Outlet />
           </Content>

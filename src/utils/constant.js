@@ -9,7 +9,8 @@ export const path = {
     Task: '/task'  ,
     CONFIGRRATION:'/configration',
     WORKSPACE:'/workspace',
-    REQUEST:'/request'
+    REQUEST:'/request',
+    ERROR:'/error'
 }
 export const role = {
     RoleAdmin: 'admin',

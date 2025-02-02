@@ -9,43 +9,40 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  // useEffect(async () => {
-  //   const checkAuth = async () => {
-  //     try {
+  useEffect(async () => {
+    const checkAuth = async () => {
+      try {
+        if (location.pathname == path.REGISTER || location.pathname == path.VERIFY_OTP) {
+          return;
+        }
+        const token = localStorage.getItem('token');
 
-  //       if (location.pathname == path.REGISTER || location.pathname == path.VERIFY_OTP) {
-  //         return;
-  //       }
-  //       const token = localStorage.getItem('token');
+        if (!token) {
+          navigate(path.LOGIN);
+          return;
+        }
 
-  //       if (!token) {
-  //         navigate(path.LOGIN);
+        const userInfo = await getUserInfoAPI();
+        if (userInfo.success) {
+          setUser(userInfo.data.data);
 
-  //         return;
-  //       }
-
-  //       const userInfo = await getUserInfoAPI();
-  //       if (userInfo.success) {
-  //         setUser(userInfo.data.data);
-  //         // if (userInfo.data.data.verified == false) {
-  //         //   const otpResult = await sendOtpAPI({ email: user.email });
-  //         //   localStorage.setItem('tempEmail', user.email)
-  //         //   message.success('Account inactive, Please vertify.');
-
-  //         //   navigate(path.VERIFY_OTP);
-  //         // }
-  //       } else {
-  //         localStorage.removeItem('token');
-  //         navigate(path.LOGIN);
-  //       }
-  //     } catch (error) {
-  //       localStorage.removeItem('token');
-  //       navigate(path.LOGIN);
-  //     }
-  //   };
-
-  //   checkAuth();
-  // }, [navigate,]);
+          if (userInfo.data.data.verified == false) {
+            const otpResult = await sendOtpAPI({ email: user.email });
+            localStorage.setItem('tempEmail', user.email)
+            message.success('Account inactive, Please vertify.');
+            navigate(path.VERIFY_OTP);
+          }
+        } else {
+          localStorage.removeItem('token');
+          navigate(path.LOGIN);
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+        navigate(path.LOGIN);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const login = async (email, password) => {
     try {
@@ -95,6 +92,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

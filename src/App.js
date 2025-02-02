@@ -19,8 +19,11 @@ import RegisterPage from './pages/Register';
 import VerifyOtpPage from './pages/VerifyOtp';
 import Configration from './pages/Configration';
 import RequestPage from './pages/Request';
+import ErrorPage from './pages/Error';
+
 import './App.css'
 import Dashboard from './pages/Dasboard';
+
 
 
 
@@ -47,7 +50,7 @@ const App = () => {
             <ConfigProvider theme={theme}>
               <Routes>
                 <Route path="/" element={<MainLayout />}>
-                  <Route path={path.WORKSPACE} element={<MainBoard />} />
+                  <Route path={path.WORKSPACE + "/:workspaceId"} element={<MainBoard />} />
                   <Route path={path.DASHBOARD} element={<Dashboard />} />
                   <Route index path={path.HOME} element={<Home />} />
                   <Route path={path.CONFIGRRATION} element={<Configration />} />
@@ -56,6 +59,7 @@ const App = () => {
                 <Route path={path.LOGIN} element={<LoginPage />} />
                 <Route path={path.REGISTER} element={<RegisterPage />} />
                 <Route path={path.VERIFY_OTP} element={<VerifyOtpPage />} />
+                <Route path={path.ERROR} element={<ErrorPage />} />
               </Routes>
             </ConfigProvider>
           </UserContext.Provider>
