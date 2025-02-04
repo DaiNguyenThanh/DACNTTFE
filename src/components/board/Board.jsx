@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
 import { useParams } from 'react-router-dom';
-
+import { Badge, Col, Row,Typography,Dropdown,Menu,Button,Popconfirm,Form,Modal,Input,Select,DatePicker,Upload } from 'antd';
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import moment from "moment";
@@ -12,7 +12,7 @@ import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
 import { UpdateTaskStage } from "../../api/TaskApi";
-
+import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
 const Container = styled("div")`
   display: flex;
   background-color: ${(props) => (props.isDraggingOver ? "#639ee2" : "#f4f5f7")};
@@ -28,6 +28,10 @@ const App = ({ filters }) => {
   const { addTaskForm } = useForm();
   const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
   const { workspaceId } = useParams();
+  const [IsEditModalVisible,setIsEditModalVisible]=useState(false);
+  const [users, setUsers] = useState([]);
+  const [form] = Form.useForm();
+  const [selectedTask,setSelectedTask]=useState(null)
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
       if (!workspaceId) return;
@@ -36,12 +40,12 @@ const App = ({ filters }) => {
       try {
         const response = await GetWorkspaceDetailAPI(workspaceId);
         const stages = response.data.stages || [];
-        const deadline_from =moment().format("DD/MM/YYYY")
+        const deadline_from = moment().format("DD/MM/YYYY")
         const deadline_to = moment().format("DD/MM/YYYY")
         let priotiry = "low"
         const status = false
-        const assignee_ids=[]
-        const collaborator_ids=[]
+        const assignee_ids = []
+        const collaborator_ids = []
         // if (noDates) {
         //   deadline_from = undefined;
         //   deadline_to = undefined;
@@ -49,19 +53,19 @@ const App = ({ filters }) => {
         //   deadline_from = new Date();
         //   deadline_to.setDate(deadline_to.getDate() + 1); // Cộng thêm 1 ngày
         // }
-        if(low){
+        if (low) {
           priotiry = "low"
         }
-        if(medium){
+        if (medium) {
           priotiry = "medium"
         }
-        if(high){
+        if (high) {
           priotiry = "high"
         }
         // Thêm logic để query API với deadline
         const allTasks = await Promise.all(
           stages.map((stage) =>
-            GetAllTasks(stage.id,assignee_ids,collaborator_ids, deadline_from, deadline_to,priotiry,status).catch(() => [])
+            GetAllTasks(stage.id, assignee_ids, collaborator_ids, deadline_from, deadline_to, priotiry, status).catch(() => [])
           ) // Trả về mảng rỗng nếu API lỗi
         );
 
@@ -98,7 +102,7 @@ const App = ({ filters }) => {
     };
 
     fetchWorkspaceDetails();
-  }, [workspaceId, noDates, dueNextDay,low,medium,high]);
+  }, [workspaceId, noDates, dueNextDay, low, medium, high]);
 
   const onDragEnd = useCallback(async ({ destination, source, draggableId, type }) => {
     if (!destination) return;
@@ -214,39 +218,133 @@ const App = ({ filters }) => {
       },
     }));
   };
+  const handleDelete = async () => {
+    try {
+      
+    } catch (error) {
+      console.error("Lỗi khi xóa stage:", error);
+    }
+  };
+  const handleCancel = () => {
+    setIsEditModalVisible(false);
+  };
+  const showEditModal = (taskId) => {
+    // Tìm task dựa trên id trong object tasks
+    const task = starter.tasks[taskId]; // Nếu tasks là một object
+    // Hoặc nếu tasks là một mảng, bạn có thể sử dụng:
+    // const task = Object.values(starter.tasks).find(t => t.id === taskId);
+
+    if (task) {
+        setSelectedTask(task);
+        setIsEditModalVisible(true);
+    } else {
+        console.error("Task not found");
+    }
+  };
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields();
+      
+      const formattedDeadline = moment(values.deadline).format('YYYY-MM-DD HH:mm:ss');
+
+      // const response = await CreateTask({
+      //   assignee_ids: values.assigners,
+      //   collaborator_ids: values.collaborators,
+      //   deadline: formattedDeadline,
+      //   description: values.description,
+      //   priority: values.priority,
+      //   title: values.title,
+      //   stage_id: column.id,
+      //   status: true,
+      //   workspace_id: selectedWorkspace
+      // });
+
+      // tasks.push(response.data);
+      setIsEditModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Lỗi khi tạo task:", error);
+    }
+  };
 
   return isLoading ? (
     <div>Loading...</div>
   ) : (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="all-column" type="column" direction="horizontal">
-        {(provided, snapshot) => (
-          <Container
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            isDraggingOver={snapshot.isDraggingOver}
-          >
-            {starter.columnOrder.map((columnId, index) => {
-              const column = starter.columns[columnId];
-              const tasks = column.taskIds.map((taskId) => starter.tasks[taskId]);
+    <>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="all-column" type="column" direction="horizontal">
+          {(provided, snapshot) => (
+            <Container
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              isDraggingOver={snapshot.isDraggingOver}
+            >
+              {starter.columnOrder.map((columnId, index) => {
+                const column = starter.columns[columnId];
+                const tasks = column.taskIds.map((taskId) => starter.tasks[taskId]);
 
-              return (
-                <Column
-                  key={column.id}
-                  index={index}
-                  column={column}
-                  tasks={tasks}
-                  form={addTaskForm}
-                  starter={starter}
-                  updateColumns={updateColumns}
-                />
-              );
-            })}
-            {provided.placeholder}
-          </Container>
-        )}
-      </Droppable>
-    </DragDropContext>
+                return (
+                  <Column
+                    key={column.id}
+                    index={index}
+                    column={column}
+                    tasks={tasks}
+                    form={addTaskForm}
+                    starter={starter}
+                    updateColumns={updateColumns}
+                    showEditModal={showEditModal}
+                  />
+                );
+              })}
+              {provided.placeholder}
+            </Container>
+          )}
+        </Droppable>
+      </DragDropContext>
+      <Modal title="Edit New Task"  open={IsEditModalVisible} onOk={handleOk} onCancel={handleCancel}>
+            <Form form={form} layout="vertical">
+              <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea />
+              </Form.Item>
+              <Form.Item label="Assigners" name="assigners">
+                <Select placeholder="Select assigners" mode="multiple">
+                  {users.length > 0 ? users.map(user => (
+                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+                  )) : <Select.Option disabled>No users available</Select.Option>}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Collaborators" name="collaborators">
+                <Select placeholder="Select collaborators" mode="multiple">
+                  {users.length > 0 ? users.map(user => (
+                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+                  )) : <Select.Option disabled>No users available</Select.Option>}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Deadline" name="deadline">
+                <DatePicker />
+              </Form.Item>
+              <Form.Item label="Priority" name="priority">
+                <Select placeholder="Select priority">
+                  <Select.Option value="high">High</Select.Option>
+                  <Select.Option value="medium">Medium</Select.Option>
+                  <Select.Option value="low">Low</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item name="attachment" label="Upload Attachment">
+                <Upload
+                  beforeUpload={() => false}
+                  //onChange={handleUploadChange}
+                >
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+              </Form.Item>
+            </Form>
+          </Modal>
+    </>
+
   );
 };
 
