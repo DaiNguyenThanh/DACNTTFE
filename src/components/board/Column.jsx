@@ -4,7 +4,7 @@ import Task from "./Task";
 import { Droppable, Draggable } from "react-beautiful-dnd";
 import { Dropdown, Menu, Popconfirm, Button, Col, Row, Modal, Form, Input, Select, DatePicker, Upload } from "antd";
 import moment from "moment";
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
 
 import { GetUserAPI } from "../../api/adminUsers";
 import { UserContext } from "../../contexts/UserContext";
@@ -19,7 +19,7 @@ const Container = styled("div")`
   border: 1px solid lightgrey;
   display: flex;
   flex-direction: column;
-  width: 230px;
+  width: 300px;
   background: white;
 `;
 const Title = styled("h3")`
@@ -30,17 +30,17 @@ const TaskList = styled("div")`
   padding: 8px;
   flex-grow: 1;
   min-height: 30px;
-  height: ${({ tasks }) => (tasks.length > 0 ? `${tasks.length * 100}px` : '30px')};
+  //height: ${({ tasks }) => (tasks.length > 0 ? `${tasks.length * 100}px` : '0px')};
   transition: background-color ease 0.2s;
   background-color: ${props =>
     props.isDraggingOver ? "palevioletred" : "white"};
 `;
-const Column = ({ tasks, column, index, starter, updateColumns }) => {
+const Column = ({ tasks, column, index, starter, updateColumns, showEditModal}) => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
   const {selectedWorkspace}=useWorkspace()
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalStageVisible] = useState(false);
   const [stageName, setStageName] = useState(column.title);
 
   useEffect(() => {
@@ -102,9 +102,9 @@ const Column = ({ tasks, column, index, starter, updateColumns }) => {
     }
   };
 
-  const showEditModal = () => {
+  const showEditModalStage = () => {
     console.log(starter)
-    setIsEditModalVisible(true);
+    setIsEditModalStageVisible(true);
     setStageName(column.title);
   };
 
@@ -112,7 +112,7 @@ const Column = ({ tasks, column, index, starter, updateColumns }) => {
     try {
       await UpdateStage({ id: column.id, name: stageName });
 
-      setIsEditModalVisible(false);
+      setIsEditModalStageVisible(false);
      
       await updateColumns();
     } catch (error) {
@@ -121,7 +121,7 @@ const Column = ({ tasks, column, index, starter, updateColumns }) => {
   };
 
   const handleEditCancel = () => {
-    setIsEditModalVisible(false);
+    setIsEditModalStageVisible(false);
   };
 
   const handleUploadChange = (info) => {
@@ -130,53 +130,60 @@ const Column = ({ tasks, column, index, starter, updateColumns }) => {
 
   return (
     <Draggable draggableId={column.id} index={index} type="column">
-      {provided => (
-        <Container
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-        >
-          <Row justify="space-between">
-            <Col>
-              <Title>{column.title} </Title>
-            </Col>
-            <Col>
-
-              <Dropdown  overlay={ 
+    {(provided) => (
+      <Container
+        ref={provided.innerRef}
+        {...provided.draggableProps}
+        {...provided.dragHandleProps}
+        style={{
+          minHeight: 200, // Chiều cao tối thiểu
+          height: `calc(210px + ${tasks.length * 80}px)`, // Tăng chiều cao dựa trên số lượng tasks
+          maxHeight: 900, // Giới hạn chiều cao tối đa
+          overflowY: "auto", // Hiển thị thanh cuộn khi quá dài
+        }}
+      >
+        <Row justify="space-between">
+          <Col>
+            <Title>{column.title} </Title>
+          </Col>
+          <Col>
+            <Dropdown
+              overlay={
                 <Menu>
-                  <Menu.Item onClick={showEditModal}>Edit</Menu.Item>
+                  <Menu.Item onClick={showEditModalStage}>Edit</Menu.Item>
                   <Popconfirm title="Are you sure to delete?" onConfirm={handleDelete}>
                     <Button type="link">Delete</Button>
                   </Popconfirm>
                 </Menu>
-              } overlayStyle={{ zIndex: 9999 }}>
-                <Button type="text" style={{margin:12}}>...</Button>
-              </Dropdown>
-            </Col>
-          </Row>
-
-          <Droppable droppableId={column.id} type="task">
-            {(provided, snapshot) => (
-              <TaskList
-                tasks={tasks}
-                isDraggingOver={snapshot.isDraggingOver}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                {tasks.map((task, index) => (
-                  <Task key={task.id} task={task} index={index} />
-                ))}
-             
-                {provided.placeholder}
-              </TaskList>
-            )}
-          </Droppable>
+              }
+              overlayStyle={{ zIndex: 9999 }}
+            >
+              <Button type="text" style={{ margin: 12 }}>...</Button>
+            </Dropdown>
+          </Col>
+        </Row>
+  
+        <Droppable droppableId={column.id} type="task">
+          {(provided, snapshot) => (
+            <TaskList
+              tasks={tasks}
+              isDraggingOver={snapshot.isDraggingOver}
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {tasks.map((task, index) => (
+                <Task key={task.id} task={task} index={index} showEditModal={showEditModal} />
+              ))}
+              {provided.placeholder}
+            </TaskList>
+          )}
+        </Droppable>
           <Button type="primary" style={{ margin: '8px' }} onClick={showModal}>
             <PlusOutlined />
             Add New Task
           </Button>
           
-          <Modal title="Edit New Task" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+          <Modal title="Create New Task" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
             <Form form={form} layout="vertical">
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
                 <Input />

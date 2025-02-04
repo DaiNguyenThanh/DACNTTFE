@@ -115,18 +115,18 @@ const RequestPage = () => {
 
     const columns = [
         {
-            title: 'reason',
+            title: 'Reason',
             dataIndex: 'reason',
             render: (text, record) => (
                 <a onClick={() => handleRowClick(record)}>{text}</a>
             ),
         },
         {
-            title: 'type',
+            title: 'Type',
             dataIndex: 'type',
         },
         {
-            title: 'status',
+            title: 'Status',
             dataIndex: 'status',
             render: (text) => (
                 <Badge count={text} style={{ backgroundColor: text === 'rejected' ? '#f5222d' : text === 'pending' ? '#faad14' : '#52c41a' }} />
