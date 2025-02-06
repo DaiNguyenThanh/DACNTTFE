@@ -11,7 +11,7 @@ import { GetAllTasks, UpdateTask, PatchTask } from "../../api/TaskApi";
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
-import { UpdateTaskStage } from "../../api/TaskApi";
+import { UpdateTaskStage  } from "../../api/TaskApi";
 import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
 
@@ -81,7 +81,7 @@ const App = ({ filters,showHistoryDrawer }) => {
           const stageTasks = allTasks[index].data;
           // Gắn tasks vào object tasks
           stageTasks.forEach((task) => {
-            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority };
+            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority ,description:task.description,assignee_ids:task.assignee_ids,collaborator_ids:task.collaborator_ids};
           });
 
           // Gắn cột vào object columns
@@ -89,9 +89,7 @@ const App = ({ filters,showHistoryDrawer }) => {
             id: stage.id,
             title: stage.name,
             taskIds: stageTasks.map((task) => task.id), // Lưu trữ taskIds cho từng column
-
           };
-
           // Lưu thứ tự cột
           columnOrder.push(stage.id);
         });
@@ -269,7 +267,7 @@ const App = ({ filters,showHistoryDrawer }) => {
     const task = starter.tasks[taskId]; // Tìm task dựa trên id
     setSelectedTask(task);
     setIsEditModalVisible(true);
-
+    console.log(task)
     // Reset các trường trong form
     form.resetFields();
 
@@ -312,6 +310,7 @@ const App = ({ filters,showHistoryDrawer }) => {
                     updateColumns={updateColumns}
                     showEditModal={showEditModal}
                     showHistoryDrawer={showHistoryDrawer}
+                    setStarter={setStarter}
                   />
                 );
               })}

@@ -63,7 +63,7 @@ const LeftMenu = () => {
     const navigate = useNavigate();
     const [workspaceList,setworkspaceList]=useState([])
     const [todoStates, setTodoStates] = useState(['']); // State để lưu danh sách các giá trị nhập vào
-    const { setSelectedWorkspace } = useWorkspace(); // Sử dụng useWorkspace để lấy setSelectedWorkspace
+    const { setSelectedWorkspace,setSelectedWorkspaceName } = useWorkspace(); // Sử dụng useWorkspace để lấy setSelectedWorkspace
     const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Thêm state cho modal chỉnh sửa
     const [editingWorkspace, setEditingWorkspace] = useState(null); // Thêm state để lưu workspace đang chỉnh sửa
     const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
@@ -137,6 +137,8 @@ const LeftMenu = () => {
             
             if (isWorkspaceItem) {
                 setSelectedWorkspace(menuItem.key); // Cập nhật selectedWorkspace
+               
+                setSelectedWorkspaceName(workspaceList.find(workspace => workspace.id === menuItem.key).name)
             }
             // await fetchWorkspaceDetail(menuItem.key); // Gọi API để lấy chi tiết workspace
             navigate(menuItem.target);
@@ -275,24 +277,36 @@ const LeftMenu = () => {
                     label: (
                         <WorkspaceContainer>
                             <WorkspaceName>{workspace.name}</WorkspaceName>
-                            <Dropdown
-                                overlay={
-                                    <Menu>
-                                        <Menu.Item icon={<EditOutlined style={{ color: '#1890ff' }} />} onClick={() => showEditModal(workspace)}>
-                                            
-                                            <Button type="link" >Edit</Button>
-                                        </Menu.Item>
-                                        <Menu.Item icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}>
-                                            <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDeleteWorkspace(workspace.id)}>
-                                                <Button type="link" danger>Delete</Button>
-                                            </Popconfirm>
-                                        </Menu.Item>
-                                    </Menu>
-                                }
-                                overlayStyle={{ zIndex: 9999 }}
-                            >
-                                <Button type="text">...</Button>
-                            </Dropdown>
+                            {(userRole === role.RoleAdmin || userRole === role.RoleSubManager) && (
+                                <Dropdown
+                                    menu={{
+                                        items: [
+                                            {
+                                                key: 'edit',
+                                                icon: <EditOutlined style={{ color: '#1890ff' }} />,
+                                                label: (
+                                                    <Button type="link" onClick={() => showEditModal(workspace)}>
+                                                        Edit
+                                                    </Button>
+                                                ),
+                                            },
+                                            {
+                                                key: 'delete',
+                                                icon: <DeleteOutlined style={{ color: '#ff4d4f' }} />,
+                                                label: (
+                                                    <Popconfirm title="Are you sure to delete?" onConfirm={() => handleDeleteWorkspace(workspace.id)}>
+                                                        <Button type="link" danger>Delete</Button>
+                                                    </Popconfirm>
+                                                ),
+                                            },
+                                        ].filter(item => (userRole === role.RoleAdmin || userRole === role.RoleSubManager) || item.key === 'delete'), 
+                                    }}
+                                    placement="bottomRight"
+                                    arrow
+                                >
+                                    <Button type="text">...</Button>
+                                </Dropdown>
+                            )}
                         </WorkspaceContainer>
                     ),
                     target: path.WORKSPACE + `/`+workspace.id

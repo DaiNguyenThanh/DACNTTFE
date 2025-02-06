@@ -5,6 +5,7 @@ const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
     const [selectedWorkspace, setSelectedWorkspace] = useState();
+    const [selectedWorkspaceName, setSelectedWorkspaceName] = useState();
     const [workspaces, setWorkspaces] = useState([]);
 
     useEffect(() => {
@@ -22,7 +23,7 @@ export const WorkspaceProvider = ({ children }) => {
     }, []);
 
     return (
-        <WorkspaceContext.Provider value={{ selectedWorkspace, setSelectedWorkspace, workspaces }}>
+        <WorkspaceContext.Provider value={{ selectedWorkspace, setSelectedWorkspace, selectedWorkspaceName, setSelectedWorkspaceName,workspaces }}>
             {children}
         </WorkspaceContext.Provider>
     );

@@ -13,7 +13,7 @@ import { GetAllTaskHistorys, GetTaskHistory } from '../api/taskHistoryApi';
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isHistoryDrawerVisible, setIsHistoryDrawerVisible] = useState(false);
-  const { selectedWorkspace } = useWorkspace();
+  const { selectedWorkspace,selectedWorkspaceName } = useWorkspace();
   const [trackingHistory, setTrackingHistory] = useState([]);
   const [filters, setFilters] = useState({
     noMember: false,
@@ -40,8 +40,8 @@ const MainBoard = () => {
   const showHistoryDrawer = async (taskId) => {
     setIsHistoryDrawerVisible(true);
     try {
-      const historyData = await GetAllTaskHistorys(taskId);
-      setTrackingHistory(historyData);
+      const historyData = await GetTaskHistory(taskId);
+      setTrackingHistory(historyData.data);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu lịch sử:", error);
     }
@@ -58,35 +58,18 @@ const MainBoard = () => {
       [name]: checked,
     }));
   };
-  const optionsMenu = (
-    <Menu>
-        <Menu.Item key="title" disabled>
-            <div style={{ fontWeight: 'bold' }}>More</div>
-        </Menu.Item>
-        <Menu.Divider />
-        <Menu.Item key="history-tracking" onClick={showHistoryDrawer}>
-            History 
-        </Menu.Item>
-        <Menu.Item key="another-option">
-            Another Option
-        </Menu.Item>
-        <Menu.Divider />
-        <Menu.Item key="settings">
-            <a href="/settings">Cài đặt</a>
-        </Menu.Item>
-    </Menu>
-);
+ 
 
 const columns = [
     {
         title: 'Time',
-        dataIndex: 'time',
-        key: 'time',
+        dataIndex: 'created_at',
+        key: 'created_at',
     },
     {
         title: 'User',
-        dataIndex: 'userName',
-        key: 'userName',
+        dataIndex: 'user',
+        key: 'user',
         render: (text, record) => (
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar
@@ -94,32 +77,59 @@ const columns = [
                     icon={!record.userImage && <UserOutlined />}
                     style={{ marginRight: 8 }}
                 />
-                {text}
+                {record.user ? record.user.name : text}
             </div>
         ) 
     },
     {
         title: 'Field Changed',
-        dataIndex: 'fieldChanged',
-        key: 'fieldChanged',
+        dataIndex: 'field',
+        key: 'field',
+        render: (text) => {
+            if (text === 'assignee_ids') {
+                return 'Assigners';
+            }
+            if (text === 'collaborator_ids') {
+              return 'Collaborators';
+          }
+            return text.charAt(0).toUpperCase() + text.slice(1);
+        },
     },
     {
         title: 'Old Value',
-        dataIndex: 'oldValue',
-        key: 'oldValue',
+        dataIndex: 'old',
+        key: 'old',
+        render: (text) => {
+          if (Array.isArray(text)) {
+              return text.map(item => item.name).join(', ');
+              
+          }
+         
+          return text?.name || text;
+          
+      },
     },
     {
         title: 'New Value',
-        dataIndex: 'newValue',
-        key: 'newValue',
+        dataIndex: 'new',
+        key: 'new',
+        render: (text) => {
+            if (Array.isArray(text)) {
+                return text.map(item => item.name).join(', ');
+                
+            }
+          
+            return text?.name || text;
+            
+        },
     }
 ];
 
   return (
     <div >
-      <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16, backgroundColor: '#ffffff3d' }}>
+      <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16,paddingTop:16, backgroundColor: '#ffffff3d' }}>
         <Col style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <h3>{selectedWorkspace}</h3>
+          <h3>{selectedWorkspaceName}</h3>
           <Button type="secondary" shape="circle" icon={<StarOutlined />} />
         </Col>
         <Col style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -130,11 +140,7 @@ const columns = [
             }} /> 
             <Button type="primary">Clear All</Button>
           </Row>
-          <Dropdown trigger={['click']} overlay={optionsMenu}>
-    <Button type='default' color='default' variant='text' icon={<EllipsisOutlined />}>
         
-    </Button>
-</Dropdown>
          
         </Col>
       </Row>
