@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, Drawer, Input, Checkbox, Row, Col, Badge, Switch ,Menu,Dropdown, Table, Avatar} from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Drawer, Input, Checkbox, Row, Col, Badge, Switch, Menu, Dropdown, Table, Avatar } from 'antd';
 import {
   StarOutlined,
   EllipsisOutlined,
@@ -8,13 +8,13 @@ import {
 } from '@ant-design/icons';
 import KanbanBoard from '../components/board/Board';
 import { useWorkspace } from "../contexts/WorkspaceProvider";
-// ... existing code ...
+import { GetAllTaskHistorys, GetTaskHistory } from '../api/taskHistoryApi';
 
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isHistoryDrawerVisible, setIsHistoryDrawerVisible] = useState(false);
-  const { selectedWorkspace }=useWorkspace()
-  //const[trackingHistory,setTrackingHistory]=useState([])
+  const { selectedWorkspace } = useWorkspace();
+  const [trackingHistory, setTrackingHistory] = useState([]);
   const [filters, setFilters] = useState({
     noMember: false,
     assignedToMe: false,
@@ -37,8 +37,14 @@ const MainBoard = () => {
     setIsDrawerVisible(false);
   };
 
-  const showHistoryDrawer = () => {
+  const showHistoryDrawer = async (taskId) => {
     setIsHistoryDrawerVisible(true);
+    try {
+      const historyData = await GetAllTaskHistorys(taskId);
+      setTrackingHistory(historyData);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu lịch sử:", error);
+    }
   };
 
   const closeHistoryDrawer = () => {
@@ -71,39 +77,6 @@ const MainBoard = () => {
     </Menu>
 );
 
-const trackingHistory = [
-    {
-        key: '1',
-        userImage: '',
-        userName: 'John Doe',
-        action: 'Changed',
-        time: '2025-10-01 10:00',
-        fieldChanged: 'Status',
-        oldValue: 'Incomplete',
-        newValue: 'Complete'
-    },
-    {
-        key: '2',
-        userImage: '', // No image
-        userName: 'Jane Smith',
-        action: 'Updated',
-        time: '2025-10-02 14:30',
-        fieldChanged: 'Priority',
-        oldValue: 'Low',
-        newValue: 'High'
-    },
-    {
-        key: '3',
-        userImage: '',
-        userName: 'Alice Johnson',
-        action: 'Changed',
-        time: '2025-10-03 09:15',
-        fieldChanged: 'Deadline',
-        oldValue: '2025-10-05',
-        newValue: '2025-10-10'
-    }
-];
-
 const columns = [
     {
         title: 'Time',
@@ -125,11 +98,6 @@ const columns = [
             </div>
         ) 
     },
-    // {
-    //     title: 'Action',
-    //     dataIndex: 'action',
-    //     key: 'action',
-    // },
     {
         title: 'Field Changed',
         dataIndex: 'fieldChanged',
@@ -151,13 +119,9 @@ const columns = [
     <div >
       <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16, backgroundColor: '#ffffff3d' }}>
         <Col style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-
           <h3>{selectedWorkspace}</h3>
           <Button type="secondary" shape="circle" icon={<StarOutlined />} />
-
-
         </Col>
-
         <Col style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <Row style={{ backgroundColor: '#2f80ed' }} >
             <Button type="primary" onClick={showDrawer} icon={<FilterOutlined />}>Filter</Button>
@@ -176,7 +140,7 @@ const columns = [
       </Row>
 
 
-      <KanbanBoard filters={filters} />
+      <KanbanBoard filters={filters} showHistoryDrawer={showHistoryDrawer}/>
       <Drawer
         title="Filter Options"
         placement="right"
@@ -258,5 +222,4 @@ const columns = [
   );
 };
 
-// ... existing code ...
 export default MainBoard;

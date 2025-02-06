@@ -35,7 +35,7 @@ const TaskList = styled("div")`
   background-color: ${props =>
     props.isDraggingOver ? "palevioletred" : "white"};
 `;
-const Column = ({ tasks, column, index, starter, updateColumns, showEditModal}) => {
+const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer}) => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
@@ -57,6 +57,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal}) 
   }, []);
 
   const showModal = () => {
+    form.resetFields()
     setIsModalVisible(true);
   };
 
@@ -104,6 +105,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal}) 
 
   const showEditModalStage = () => {
     console.log(starter)
+   
     setIsEditModalStageVisible(true);
     setStageName(column.title);
   };
@@ -172,7 +174,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal}) 
               {...provided.droppableProps}
             >
               {tasks.map((task, index) => (
-                <Task key={task.id} task={task} index={index} showEditModal={showEditModal} />
+                <Task key={task.id} task={task} index={index} showEditModal={showEditModal} showHistoryDrawer={showHistoryDrawer} />
               ))}
               {provided.placeholder}
             </TaskList>

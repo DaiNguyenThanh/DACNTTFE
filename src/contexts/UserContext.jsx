@@ -8,9 +8,11 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      
       try {
         const response = await GetUserAPI();
         setUsers(response.data.items);
+        console.log(users)
       } catch (error) {
         console.error("Lỗi khi lấy danh sách người dùng:", error);
       }
@@ -27,10 +29,10 @@ export const UserProvider = ({ children }) => {
 };
 
 const useUsers = () => {
-    const { users } = useContext(UserContext);
+    const  context = useContext(UserContext);
     
     // Đảm bảo users luôn là một mảng
-    return Array.isArray(users) ? users : [];
+    return context;
 };
 
 export default useUsers;

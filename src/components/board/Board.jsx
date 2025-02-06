@@ -7,12 +7,14 @@ import moment from "moment";
 import './Board.css'
 import Column from "./Column";
 import { GetWorkspaceDetailAPI } from "../../api/workspaceApi";
-import { GetAllTasks } from "../../api/TaskApi";
+import { GetAllTasks, UpdateTask, PatchTask } from "../../api/TaskApi";
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
 import { UpdateTaskStage } from "../../api/TaskApi";
 import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
+import useUsers from '../../contexts/UserContext';
+
 const Container = styled("div")`
   display: flex;
   background-color: ${(props) => (props.isDraggingOver ? "#639ee2" : "#f4f5f7")};
@@ -22,16 +24,17 @@ const Container = styled("div")`
   min-width:300px
 `;
 
-const App = ({ filters }) => {
+const App = ({ filters,showHistoryDrawer }) => {
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
   const { addTaskForm } = useForm();
   const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
   const { workspaceId } = useParams();
   const [IsEditModalVisible,setIsEditModalVisible]=useState(false);
-  const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
   const [selectedTask,setSelectedTask]=useState(null)
+  const { users } = useUsers();
+
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
       if (!workspaceId) return;
@@ -103,6 +106,11 @@ const App = ({ filters }) => {
 
     fetchWorkspaceDetails();
   }, [workspaceId, noDates, dueNextDay, low, medium, high]);
+
+  useEffect(() => {
+    console.log("Danh sách người dùng đã thay đổi:", users);
+    // Bạn có thể thực hiện các hành động khác ở đây nếu cần
+  }, [users]);
 
   const onDragEnd = useCallback(async ({ destination, source, draggableId, type }) => {
     if (!destination) return;
@@ -228,44 +236,54 @@ const App = ({ filters }) => {
   const handleCancel = () => {
     setIsEditModalVisible(false);
   };
-  const showEditModal = (taskId) => {
-    // Tìm task dựa trên id trong object tasks
-    const task = starter.tasks[taskId]; // Nếu tasks là một object
-    // Hoặc nếu tasks là một mảng, bạn có thể sử dụng:
-    // const task = Object.values(starter.tasks).find(t => t.id === taskId);
+  const handleFieldChange = async (changedFields) => {
+    const updatedData = {
+      id: selectedTask.id, // ID của task đang được chỉnh sửa
+      ...changedFields, // Chỉ gửi các trường đã thay đổi
+    };
 
-    if (task) {
-        setSelectedTask(task);
-        setIsEditModalVisible(true);
-    } else {
-        console.error("Task not found");
+    // Chuyển đổi deadline sang định dạng moment nếu có
+    if (updatedData.deadline) {
+      updatedData.deadline = moment(updatedData.deadline).format('YYYY-MM-DD HH:mm:ss');
     }
-  };
-  const handleOk = async () => {
+
     try {
-      const values = await form.validateFields();
-      
-      const formattedDeadline = moment(values.deadline).format('YYYY-MM-DD HH:mm:ss');
+      await PatchTask(updatedData); // Gọi hàm PatchTask với dữ liệu đã cập nhật
 
-      // const response = await CreateTask({
-      //   assignee_ids: values.assigners,
-      //   collaborator_ids: values.collaborators,
-      //   deadline: formattedDeadline,
-      //   description: values.description,
-      //   priority: values.priority,
-      //   title: values.title,
-      //   stage_id: column.id,
-      //   status: true,
-      //   workspace_id: selectedWorkspace
-      // });
-
-      // tasks.push(response.data);
-      setIsEditModalVisible(false);
-      form.resetFields();
+      // Cập nhật state starter sau khi patch thành công
+      setStarter((prev) => ({
+        ...prev,
+        tasks: {
+          ...prev.tasks,
+          [selectedTask.id]: {
+            ...prev.tasks[selectedTask.id],
+            ...changedFields, // Cập nhật các trường đã thay đổi
+          },
+        },
+      }));
     } catch (error) {
-      console.error("Lỗi khi tạo task:", error);
+      console.error("Lỗi khi cập nhật task:", error);
     }
   };
+  const showEditModal = (taskId) => {
+    const task = starter.tasks[taskId]; // Tìm task dựa trên id
+    setSelectedTask(task);
+    setIsEditModalVisible(true);
+
+    // Reset các trường trong form
+    form.resetFields();
+
+    // Thiết lập giá trị mặc định cho form
+    form.setFieldsValue({
+      title: task.title,
+      description: task.description || '', // Nếu có trường mô tả
+      assignee_ids: task.assignee_ids || [], // Nếu có trường assignee_ids
+      collaborator_ids: task.collaborator_ids || [], // Nếu có trường collaborator_ids
+      deadline: moment(task.deadline), // Chuyển đổi deadline sang định dạng moment
+      priority: task.priority,
+    });
+  };
+  
 
   return isLoading ? (
     <div>Loading...</div>
@@ -293,6 +311,7 @@ const App = ({ filters }) => {
                     starter={starter}
                     updateColumns={updateColumns}
                     showEditModal={showEditModal}
+                    showHistoryDrawer={showHistoryDrawer}
                   />
                 );
               })}
@@ -301,48 +320,58 @@ const App = ({ filters }) => {
           )}
         </Droppable>
       </DragDropContext>
-      <Modal title="Edit New Task"  open={IsEditModalVisible} onOk={handleOk} onCancel={handleCancel}>
-            <Form form={form} layout="vertical">
-              <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Description" name="description">
-                <Input.TextArea />
-              </Form.Item>
-              <Form.Item label="Assigners" name="assigners">
-                <Select placeholder="Select assigners" mode="multiple">
-                  {users.length > 0 ? users.map(user => (
-                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
-                  )) : <Select.Option disabled>No users available</Select.Option>}
-                </Select>
-              </Form.Item>
-              <Form.Item label="Collaborators" name="collaborators">
-                <Select placeholder="Select collaborators" mode="multiple">
-                  {users.length > 0 ? users.map(user => (
-                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
-                  )) : <Select.Option disabled>No users available</Select.Option>}
-                </Select>
-              </Form.Item>
-              <Form.Item label="Deadline" name="deadline">
-                <DatePicker />
-              </Form.Item>
-              <Form.Item label="Priority" name="priority">
-                <Select placeholder="Select priority">
-                  <Select.Option value="high">High</Select.Option>
-                  <Select.Option value="medium">Medium</Select.Option>
-                  <Select.Option value="low">Low</Select.Option>
-                </Select>
-              </Form.Item>
-              <Form.Item name="attachment" label="Upload Attachment">
-                <Upload
-                  beforeUpload={() => false}
-                  //onChange={handleUploadChange}
-                >
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
-              </Form.Item>
-            </Form>
-          </Modal>
+      <Modal title="Edit New Task" open={IsEditModalVisible} onCancel={handleCancel} footer={null}>
+        <Form form={form} layout="vertical">
+          <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
+            <Input onBlur={(e) => handleFieldChange({ title: e.target.value })} />
+          </Form.Item>
+          <Form.Item label="Description" name="description">
+            <Input.TextArea onBlur={(e) => handleFieldChange({ description: e.target.value })} />
+          </Form.Item>
+          <Form.Item label="Assigners" name="assignee_ids">
+            <Select
+              placeholder="Select assigners"
+              mode="multiple"
+              onChange={(value) => handleFieldChange({ assignee_ids: value })}
+              value={selectedTask?.assignee_ids || []}
+            >
+              {users.length > 0 ? users.map(user => (
+                <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+              )) : <Select.Option disabled>No users available</Select.Option>}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Collaborators" name="collaborator_ids">
+            <Select
+              placeholder="Select collaborators"
+              mode="multiple"
+              onChange={(value) => handleFieldChange({ collaborator_ids: value })}
+              value={selectedTask?.collaborator_ids || []}
+            >
+              {users.length > 0 ? users.map(user => (
+                <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+              )) : <Select.Option disabled>No users available</Select.Option>}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Deadline" name="deadline">
+            <DatePicker onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
+          </Form.Item>
+          <Form.Item label="Priority" name="priority">
+            <Select placeholder="Select priority" onBlur={(e) => handleFieldChange({ priority: e })}>
+              <Select.Option value="high">High</Select.Option>
+              <Select.Option value="medium">Medium</Select.Option>
+              <Select.Option value="low">Low</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="attachment" label="Upload Attachment">
+            <Upload
+              beforeUpload={() => false}
+              //onChange={handleUploadChange}
+            >
+              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
 
   );

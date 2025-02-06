@@ -4,7 +4,7 @@ import { GetAllWorkSpaces } from '../api/workspaceApi';
 const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
-    const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+    const [selectedWorkspace, setSelectedWorkspace] = useState();
     const [workspaces, setWorkspaces] = useState([]);
 
     useEffect(() => {

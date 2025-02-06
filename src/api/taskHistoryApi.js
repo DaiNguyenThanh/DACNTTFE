@@ -3,9 +3,9 @@ import axios from './axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
 
-export const GetAllTaskHistorys = async () => {
+export const GetAllTaskHistorys = async (taskId) => {
     try {
-        const response = await axios.get(`${API_URL}/taskhistorys/all`
+        const response = await axios.get(`${API_URL}/task-histories/all`
         );
         return response.data;
     } catch (error) {
@@ -21,7 +21,7 @@ export const GetAllTaskHistorys = async () => {
 
 export const GetTaskHistory = async ( id ) => {
     try {
-        const response = await axios.get(`${API_URL}/taskhistorys/${id}`,
+        const response = await axios.get(`${API_URL}/task-histories/${id}`,
         );
         return response.data;
     } catch (error) {
