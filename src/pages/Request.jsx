@@ -9,7 +9,13 @@ import { useWorkspace } from '../contexts/WorkspaceProvider';
 import { GetAllWorkSpaces, GetWorkspaceDetailAPI } from '../api/workspaceApi';
 import { GetAllTasks } from '../api/TaskApi';
 import { GetAllRequest, GetRequest,ConfirmRequest ,DeleteRequest } from '../api/requestAPI';
-
+import {
+    BarChartOutlined,
+    PieChartOutlined,
+    PlusOutlined,
+    EllipsisOutlined,
+    NumberOutlined
+} from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 const { TabPane } = Tabs;
@@ -261,7 +267,7 @@ const RequestPage = () => {
                 />
             </div>
             <div style={{ marginLeft: '20px', width: '50%' }}>
-                <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: '16px' }}>+ request</Button>
+                <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: '16px' }} icon={<PlusOutlined/>}>Request</Button>
                 {requestDetail ? (
                     <>
                         <Card title="Request Details">

@@ -142,4 +142,31 @@ export const UpdateTaskStage= async(id,position,pre_task_id,stage_id)=>{
         }
     }
 }
+export const PatchTask=async ({ id,assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id})=>{
+    // Kiểm tra nếu các trường là null hoặc empty thì không gửi
+    const dataToSend = {
+        ...(assignee_ids && { assignee_ids }),
+        ...(collaborator_ids && { collaborator_ids }),
+        ...(deadline && { deadline }),
+        ...(description && { description }),
+        ...(priority && { priority }),
+        ...(stage_id && { stage_id }),
+        ...(status && { status }),
+        ...(title && { title }),
+        ...(workspace_id && { workspace_id }),
+    };
+
+    try {
+        const response = await axios.patch(`${API_URL}/tasks/${id}`, dataToSend);
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Update failed');
+        } else if (error.request) {
+            throw new Error('Cannot connect to server');
+        } else {
+            throw new Error('An error occurred');
+        }
+    }
+}
 
