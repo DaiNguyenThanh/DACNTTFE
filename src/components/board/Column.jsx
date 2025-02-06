@@ -12,7 +12,7 @@ import useUsers from '../../contexts/UserContext';
 import { CreateTask } from '../../api/TaskApi';
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { DeleteStages, UpdateStage } from '../../api/StageApi';
-
+import { role } from "../../utils";
 const Container = styled("div")`
   margin: 8px;
   border-radius: 2px;
@@ -35,14 +35,17 @@ const TaskList = styled("div")`
   background-color: ${props =>
     props.isDraggingOver ? "palevioletred" : "white"};
 `;
-const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer}) => {
+const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer,setStarter}) => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
   const {selectedWorkspace}=useWorkspace()
   const [isEditModalVisible, setIsEditModalStageVisible] = useState(false);
   const [stageName, setStageName] = useState(column.title);
+  const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+  // Lấy thông tin người dùng từ localStorage
 
+  const userRole = user ? user.role : null;
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -79,7 +82,22 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
         workspace_id: selectedWorkspace
       });
 
-      tasks.push(response.data);
+      // Cập nhật state starter với task mới
+      setStarter((prev) => ({
+        ...prev,
+        tasks: {
+          ...prev.tasks,
+          [response.data.id]: response.data, // Thêm task mới vào tasks
+        },
+        columns: {
+          ...prev.columns,
+          [column.id]: {
+            ...prev.columns[column.id],
+            taskIds: [...prev.columns[column.id].taskIds, response.data.id], // Thêm ID của task mới vào danh sách taskIds của cột
+          },
+        },
+      }));
+
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
@@ -149,19 +167,21 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
             <Title>{column.title} </Title>
           </Col>
           <Col>
-            <Dropdown
-              overlay={
-                <Menu>
-                  <Menu.Item onClick={showEditModalStage}>Edit</Menu.Item>
-                  <Popconfirm title="Are you sure to delete?" onConfirm={handleDelete}>
-                    <Button type="link">Delete</Button>
-                  </Popconfirm>
-                </Menu>
-              }
-              overlayStyle={{ zIndex: 9999 }}
-            >
-              <Button type="text" style={{ margin: 12 }}>...</Button>
-            </Dropdown>
+            {(userRole === role.RoleAdmin || userRole === role.RoleSubManager) && (
+              <Dropdown
+                overlay={
+                  <Menu>
+                    <Menu.Item onClick={showEditModalStage}>Edit</Menu.Item>
+                    <Popconfirm title="Are you sure to delete?" onConfirm={handleDelete}>
+                      <Button type="link">Delete</Button>
+                    </Popconfirm>
+                  </Menu>
+                }
+                overlayStyle={{ zIndex: 9999 }}
+              >
+                <Button type="text" style={{ margin: 12 }}>...</Button>
+              </Dropdown>
+            )}
           </Col>
         </Row>
   
@@ -173,17 +193,26 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              {tasks.map((task, index) => (
-                <Task key={task.id} task={task} index={index} showEditModal={showEditModal} showHistoryDrawer={showHistoryDrawer} />
-              ))}
+              {Array.isArray(tasks) && tasks.length > 0 ? (
+                tasks.map((task, index) => (
+                  task && task.id ? (
+                    <Task key={task.id} task={task} index={index} showEditModal={showEditModal} showHistoryDrawer={showHistoryDrawer} setStarter={setStarter} />
+                  ) : null
+                ))
+              ) : (
+                <div style={{ textAlign: "center", marginTop: "20px", color: "gray" }}>No tasks available</div>
+              )}
               {provided.placeholder}
             </TaskList>
           )}
         </Droppable>
-          <Button type="primary" style={{ margin: '8px' }} onClick={showModal}>
-            <PlusOutlined />
-            Add New Task
-          </Button>
+        {(userRole === role.RoleAdmin||userRole===role.RoleSubjectManager) && (
+                        <Button type="primary" style={{ margin: '8px' }} onClick={showModal}>
+                        <PlusOutlined />
+                        Add New Task
+                      </Button>
+                      )}
+         
           
           <Modal title="Create New Task" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
             <Form form={form} layout="vertical">
