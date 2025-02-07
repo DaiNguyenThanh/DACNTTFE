@@ -25,7 +25,7 @@ import { path, role } from '../../utils';
 import { Color } from 'antd/es/color-picker';
 import { GetUserAPI } from '../../api/adminUsers';
 import { GetAllSubjectAPI } from '../../api/subjectApi';
-import { CreateWorkSpace, DeleteWorkSpace, GetWorkspaceDetailAPI } from '../../api/workspaceApi';
+import { CreateWorkSpace, DeleteWorkSpace, GetWorkSpace, GetWorkspaceDetailAPI, UpdateWorkSpace } from '../../api/workspaceApi';
 import { GetAllWorkSpaces } from '../../api/workspaceApi'; // Import API để lấy danh sách workspace
 import { useWorkspace } from '../../contexts/WorkspaceProvider'; // Nhập useWorkspace
 import styled from 'styled-components'; // Đảm bảo bạn đã import styled-components
@@ -357,9 +357,27 @@ const LeftMenu = () => {
         }
     };
 
-    const showEditModal = (workspace) => {
-        setEditingWorkspace(workspace); // Lưu workspace đang chỉnh sửa
-        setIsEditModalVisible(true); // Hiển thị modal chỉnh sửa
+    const showEditModal = async (workspace) => {
+        try {
+            const response = await GetWorkSpace(workspace.id); // Gọi API để lấy chi tiết workspace
+            if (response.error_code === 0) {
+                const { name, users, subjects, stages } = response.data; // Lấy thông tin từ response
+                workspaceform.setFieldsValue({
+                    id: workspace.id,
+                    workspaceName: name,
+                    users: users.map(user => user.id), // Thiết lập giá trị mặc định cho người dùng
+                    subjects: subjects.map(subject => subject.id), // Thiết lập giá trị mặc định cho môn học
+                    stages: stages.map(stage => stage.id), // Chỉ lấy cột id của stages
+                });
+                setEditingWorkspace(workspace); // Lưu workspace đang chỉnh sửa
+                setIsEditModalVisible(true); // Hiển thị modal chỉnh sửa
+            } else {
+                message.error(response.message || 'Failed to fetch workspace details.');
+            }
+        } catch (error) {
+            console.error("Error fetching workspace details:", error);
+            message.error('Failed to fetch workspace details.');
+        }
     };
 
     const handleEditOk = async () => {
@@ -367,25 +385,27 @@ const LeftMenu = () => {
             // Lấy form instance và validate các field
             const values = await workspaceform.validateFields(); 
             
-            const { workspaceName, users, subjects } = values; // Lấy giá trị từ form
+            const { workspaceName, users, subjects,stages } = values; // Lấy giá trị từ form
             console.log(workspaceName);
     
             // Gửi request tạo workspace
-            const response = await CreateWorkSpace({
+            const response = await UpdateWorkSpace({
+                id:editingWorkspace.id,
                 name: workspaceName,
                 user_ids: users,
                 subject_ids: subjects,
-                stages: todoStates,
+                stages: stages,
             });
 
             if (response.error_code == 0) {
-                message.success('Workspace created successfully!'); // Hiển thị thông báo thành công
+                message.success('Workspace updated successfully!'); // Hiển thị thông báo thành công
                 
-                // Thêm workspace mới vào workspaceList
-                setworkspaceList(prevList => [
-                    ...prevList,
-                    { id: response.data.id, name: workspaceName } // Giả sử response.data.id chứa ID của workspace mới
-                ]);
+                // Cập nhật workspace trong workspaceList
+                setworkspaceList(prevList => 
+                    prevList.map(workspace => 
+                        workspace.id === response.data.id ? { ...workspace, name: workspaceName } : workspace
+                    )
+                );
 
                 setIsEditModalVisible(false); // Đóng modal
                 // Có thể thêm logic để cập nhật danh sách workspace nếu cần
@@ -495,12 +515,13 @@ const LeftMenu = () => {
                                 ))}
                             </Select>
                         </Form.Item>
-                        <Form.Item label="Create Stages">
-                            {todoStates.map((state, index) => (
+                        <Form.Item label="Stages" hidden="true" name="stages"></Form.Item>
+                        {/* <Form.Item label="Stages">
+                            {workspaceform.getFieldValue('stages')?.map((stage, index) => (
                                 <Row key={index} gutter={[16, 8]} style={{ marginBottom: 4 }}>
-                                    <Col span={20}>
+                                    <Col span={24}>
                                         <Input
-                                            value={state}
+                                            value={stage}
                                             onChange={(e) => handleInputChange(index, e.target.value)}
                                             placeholder={`Stage ${index + 1}`}
                                         />
@@ -509,8 +530,17 @@ const LeftMenu = () => {
                                         <Dropdown
                                             overlay={
                                                 <Menu>
-                                                    <Menu.Item onClick={() => handleRemoveInput(index)}>Remove</Menu.Item>
-                                                    <Menu.Item onClick={() => handleMoveDown(index)}>Move Down</Menu.Item>
+                                                    <Menu.Item onClick={() => handleRemoveInput(index)}>
+                                                        <DeleteOutlined /> Remove
+                                                    </Menu.Item>
+                                                    {index > 0 && (
+                                                        <Menu.Item onClick={() => handleMoveUp(index)}>
+                                                            <UpOutlined /> Move Up
+                                                        </Menu.Item>
+                                                    )}
+                                                    <Menu.Item onClick={() => handleMoveDown(index)}>
+                                                        <DownOutlined /> Move Down
+                                                    </Menu.Item>
                                                 </Menu>
                                             }
                                             trigger={['click']}
@@ -522,10 +552,10 @@ const LeftMenu = () => {
                                     </Col>
                                 </Row>
                             ))}
-                            <Button type="dashed" onClick={handleAddInput} style={{ marginTop: 8 }} icon={<PlusOutlined />}>
+                             <Button type="dashed" onClick={handleAddInput} style={{ marginTop: 8 }} icon={<PlusOutlined />}>
                                 New
-                            </Button>
-                        </Form.Item>
+                            </Button> 
+                        </Form.Item> */}
                     </Form>
                 </Modal>
                 {/* <Button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Table, Button, Modal, Form, Input, Popconfirm } from 'antd';
+import { Tabs, Table, Button, Modal, Form, Input, Popconfirm, Select } from 'antd';
 import { GetAllSubjectAPI, CreateSubjectAPI, UpdateSubjectAPI, DeleteSubjectAPI } from '../api/subjectApi';
 import {  DeleteUserAPI, updateUserAPI, GetUserAPI } from '../api/adminUsers';
 import {
@@ -171,6 +171,7 @@ const Configration = () => {
 
     const handleEditUser = (id) => {
         const user = userDataSource.find(user => user.id === id);
+        console.log(user)
         setCurrentUser(user);
         userForm.setFieldsValue(user);
         setIsUserModalVisible(true);
@@ -181,9 +182,18 @@ const Configration = () => {
             try {
                 if (currentUser) {
                     // Cập nhật người dùng hiện tại
-                    await updateUserAPI({ id: currentUser.id, name: values.name, email: values.email, role: values.role, subject_id: values.subject_id });
-                    setUserDataSource(userDataSource.map(user => (user.id === currentUser.id ? { ...user, ...values, subject:{name:values.subject_id} } : user)));
-                    userForm.resetFields()
+                    await updateUserAPI({ id: currentUser.id, name: values.name, email: values.email, role: values.role, subject_id: values.subject });
+                    // Cập nhật lại userDataSource sau khi sửa thành công
+                    const responseUser = await GetUserAPI(); // Lấy id từ đối tượng user
+                
+                // Kiểm tra xem responseUser.data có phải là mảng không
+                if (Array.isArray(responseUser.data.items)) {
+                    setUserDataSource(responseUser.data.items);
+                    console.log(responseUser.data.items)
+                } else {
+                    console.error('Fetched user data is not an array:', responseUser.data);
+                }
+                    userForm.resetFields();
                 } 
                 // else {
                 //     // Thêm mới người dùng
@@ -339,13 +349,13 @@ const Configration = () => {
                             >
                                 <Input />
                             </Form.Item>
-                            <Form.Item 
-                                name="subject_id" 
-                                label="Subject" 
-                                rules={[{ required: true, message: 'Please input the subject!' }]}
-                            >
-                                <Input />
-                            </Form.Item>
+                            <Form.Item label="Select Subjects" name="subject" rules={[{ required: true, message: 'Please select at least one subject!' }]}>
+                            <Select mode="default" placeholder="Select subject" showSearch>
+                                {dataSource.map(subject => (
+                                    <Select.Option key={subject.id} value={subject.id}>{subject.name}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
                         </Form>
                     </Modal>
                 </TabPane>

@@ -29,9 +29,7 @@ export const updateUserAPI = async ({ id, email, name, role, subject_id }) => {
             email,
             name,
             role,
-            subject:{
-                id:subject_id
-            }
+            subject_id
         } );
         return response.data;
     } catch (error) {
