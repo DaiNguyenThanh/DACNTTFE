@@ -31,11 +31,18 @@ export const CreateTask = async ({  assignee_ids, collaborator_ids,deadline,desc
     }
 }
 
-export const GetAllTasks = async (stage_id,assignee_ids,collaborator_ids,deadline_from,deadline_to,priority,status) => {
+export const GetAllTasks = async (stage_id, assignee_ids, collaborator_ids, deadline_from, deadline_to, priority, status) => {
     try {
-        const response = await axios.get(`${API_URL}/tasks/all?stage_id=${stage_id}&&assignee_ids=${assignee_ids}&&deadline_from=${deadline_from}&&deadline_to=${deadline_to}&&priorty=${priority}&&status=${status}
-            
-            `);
+        const queryParams = new URLSearchParams();
+
+        if (stage_id !== null && stage_id !== undefined) queryParams.append('stage_id', stage_id);
+        if (assignee_ids !== null && assignee_ids !== undefined) queryParams.append('assignee_ids', assignee_ids);
+        if (deadline_from !== null && deadline_from !== undefined) queryParams.append('deadline_from', deadline_from);
+        if (deadline_to !== null && deadline_to !== undefined) queryParams.append('deadline_to', deadline_to);
+        if (priority !== null && priority !== undefined) queryParams.append('priority', priority);
+        if (status !== null && status !== undefined) queryParams.append('status', status);
+
+        const response = await axios.get(`${API_URL}/tasks/all?${queryParams.toString()}`);
         return response.data;
     } catch (error) {
         if (error.response) {

@@ -130,6 +130,10 @@ const RequestPage = () => {
         {
             title: 'Type',
             dataIndex: 'type',
+            render: (text) => (
+                text === "change-deadline" ? "Change Deadline" : 
+                text === "make-done" ? "Make Done" : text
+            )
         },
         {
             title: 'Status',
@@ -161,25 +165,30 @@ const RequestPage = () => {
 
     const handleSubmit = async (values) => {
         try {
-            const attachmentResponse = await CreateFile({ file: values.attachment, from: 'request' });
-            const attachmentId = attachmentResponse.data.id;
+            let attachmentId = null;
+
+            // Kiểm tra xem file có tồn tại hay không
+            if (values.attachment && values.attachment.length > 0) {
+                const attachmentResponse = await CreateFile({ file: values.attachment[0], from: 'request' }); // Sử dụng values.attachment[0] nếu là mảng
+                attachmentId = attachmentResponse.data.id;
+            }
 
             const formattedDate = moment(values.date).format('YYYY-MM-DD HH:mm:ss');
 
             const requestResponse = await CreateRequest({
-                attachment_ids: [attachmentId],
+                attachment_ids: attachmentId ? [attachmentId] : undefined, // Chỉ thêm attachmentId nếu có
                 deadline: formattedDate,
                 reason: values.note,
                 task_id: values.task_id,
                 type: values.type,
                 workspace_id: values.workspace_id
             });
-
+            form.resetFields()
             console.log('Request created successfully:', requestResponse);
             setRequests(prevRequests => [...prevRequests, requestResponse.data]);
-            if(requestResponse.message=="Success"){
-                fetchRequests()
-                message.success("Request created successfully!")
+            if (requestResponse.message == "Success") {
+                await fetchRequests();
+                message.success("Request created successfully!");
             }
         } catch (error) {
             console.error('Error creating request:', error.message);
@@ -226,7 +235,7 @@ const RequestPage = () => {
             const response= await DeleteRequest([requestId])
             if(response.message=="Success"){
                 fetchRequests()
-                message.success('successfully Deleted! ');
+                message.success('Successfully Deleted! ');
             }
         } catch (error) {
             console.error('Error declining request:', error.message);
@@ -271,7 +280,7 @@ const RequestPage = () => {
                 {requestDetail ? (
                     <>
                         <Card title="Request Details">
-                            <p><strong>Type:</strong> {requestDetail.type}</p>
+                            <p><strong>Type:</strong> {requestDetail.type==="change-deadline" ? "Change Deadline" : requestDetail.type==="make-done" ? "Make Done" : requestDetail.type}</p>
                             <p><strong>Reason:</strong> {requestDetail.reason}</p>
                             <p><strong>Created by:</strong> {requestDetail.user.name}</p>
                             <p><strong>Status:</strong> { <Badge count={requestDetail.status} style={{ backgroundColor: requestDetail.status === 'rejected' ? '#f5222d' : requestDetail.status === 'pending' ? '#faad14' : '#52c41a' }} />}</p>
@@ -336,7 +345,7 @@ const RequestPage = () => {
                     <Form.Item label="Date" name="date" rules={[{ required: true, message: 'Please select the date!' }]}>
                         <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
-                    <Form.Item label="Reason" name="note">
+                    <Form.Item label="Reason" name="note" rules={[{ required: true, message: 'Please input the reason!' }]}>
                         <Input.TextArea  editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
                     </Form.Item>
                     {/* <Form.Item label="Reason" name="reason">

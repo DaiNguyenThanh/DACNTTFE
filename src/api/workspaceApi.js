@@ -56,10 +56,18 @@ export const GetWorkSpace = async (id) => {
     }
 }
 
-export const UpdateWorkSpace = async ({ id, name }) => {
+export const UpdateWorkSpace = async ({ id,
+    name,
+    user_ids,
+    subject_ids,
+    stages }) => {
     try {
         const response = await axios.put(`${API_URL}/workspaces/${id}`, {
-            name: name
+            id,
+            name,
+            user_ids,
+            subject_ids,
+            stages
         });
         return response.data;
     } catch (error) {

@@ -7,7 +7,7 @@ import moment from "moment";
 import './Board.css'
 import Column from "./Column";
 import { GetWorkspaceDetailAPI } from "../../api/workspaceApi";
-import { GetAllTasks, UpdateTask, PatchTask } from "../../api/TaskApi";
+import { GetAllTasks, UpdateTask, PatchTask, GetTask } from "../../api/TaskApi";
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
@@ -263,22 +263,23 @@ const App = ({ filters,showHistoryDrawer }) => {
       console.error("Lỗi khi cập nhật task:", error);
     }
   };
-  const showEditModal = (taskId) => {
-    const task = starter.tasks[taskId]; // Tìm task dựa trên id
-    setSelectedTask(task);
+  const showEditModal = async (taskId) => {
+    // Gọi API để lấy task dựa trên id
+    const response = await GetTask(taskId); // Thay đổi ở đây
+    setSelectedTask(response.data);
     setIsEditModalVisible(true);
-    console.log(task)
+    console.log(response.data);
     // Reset các trường trong form
     form.resetFields();
 
     // Thiết lập giá trị mặc định cho form
     form.setFieldsValue({
-      title: task.title,
-      description: task.description || '', // Nếu có trường mô tả
-      assignee_ids: task.assignee_ids || [], // Nếu có trường assignee_ids
-      collaborator_ids: task.collaborator_ids || [], // Nếu có trường collaborator_ids
-      deadline: moment(task.deadline), // Chuyển đổi deadline sang định dạng moment
-      priority: task.priority,
+      title: response.data.title,
+      description: response.data.description || '', // Nếu có trường mô tả
+      assignee_ids: response.data.assignee_ids || [], // Nếu có trường assignee_ids
+      collaborator_ids: response.data.collaborator_ids || [], // Nếu có trường collaborator_ids
+      deadline: moment(response.data.deadline), // Chuyển đổi deadline sang định dạng moment
+      priority: response.data.priority,
     });
   };
   
@@ -355,7 +356,7 @@ const App = ({ filters,showHistoryDrawer }) => {
             <DatePicker onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
           </Form.Item>
           <Form.Item label="Priority" name="priority">
-            <Select placeholder="Select priority" onBlur={(e) => handleFieldChange({ priority: e })}>
+            <Select placeholder="Select priority" onChange={(value) => handleFieldChange({ priority: value })}>
               <Select.Option value="high">High</Select.Option>
               <Select.Option value="medium">Medium</Select.Option>
               <Select.Option value="low">Low</Select.Option>
