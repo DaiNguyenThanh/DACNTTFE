@@ -12,6 +12,7 @@ import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
 import { UpdateTaskStage  } from "../../api/TaskApi";
+import { CreateFile } from "../../api/fileAPI";
 import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
 
@@ -34,6 +35,7 @@ const App = ({ filters,showHistoryDrawer }) => {
   const [form] = Form.useForm();
   const [selectedTask,setSelectedTask]=useState(null)
   const { users } = useUsers();
+  const [fileList, setFileList] = useState([]);
 
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
@@ -282,7 +284,18 @@ const App = ({ filters,showHistoryDrawer }) => {
       priority: response.data.priority,
     });
   };
-  
+  const handleUploadChange = async (info) => {
+    
+    const { file } = info;
+    
+   const response= await CreateFile({file:file,from:"task"})
+        if (response.message === "Success") {
+            const fileId = response.data.id;
+            
+            await PatchTask({id:selectedTask.id, file_ids: [fileId] });
+        }
+   
+  };
 
   return isLoading ? (
     <div>Loading...</div>
@@ -364,8 +377,9 @@ const App = ({ filters,showHistoryDrawer }) => {
           </Form.Item>
           <Form.Item name="attachment" label="Upload Attachment">
             <Upload
+              onChange={handleUploadChange}
+              fileList={fileList}
               beforeUpload={() => false}
-              //onChange={handleUploadChange}
             >
               <Button icon={<UploadOutlined />}>Click to Upload</Button>
             </Upload>

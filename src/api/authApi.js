@@ -1,6 +1,28 @@
 import axios from 'axios';
-
+import customAxios from './axios'
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
+export const ChangePassword = async ({ new_password, old_password }) => {
+  try {
+    
+    const response = await customAxios.post(`${API_URL}/auth/change-password`, {
+      new_password,
+      old_password
+    });
+    
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      // Lỗi từ server (status code không phải 2xx)
+      throw new Error(error.response.data.message || 'Đăng ký thất bại');
+    } else if (error.request) {
+      // Không nhận được response
+      throw new Error('Không thể kết nối đến server');
+    } else {
+      // Lỗi khi setup request
+      throw new Error('Có lỗi xảy ra');
+    }
+  }
+};
 export const registerAPI = async ({ email, password, name }) => {
   try {
     
@@ -188,3 +210,4 @@ export const getUserInfoAPI = async () => {
     }
   }
 };
+

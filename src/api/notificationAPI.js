@@ -4,12 +4,12 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
 
 
-export const ReadNotification = async ({  name, stages,subject_ids,user_ids }) => {
+export const ReadNotification = async () => {
    
     try {
-        const response = await axios.post(`${API_URL}/notifications/read`, {
+        const response = await axios.post(`${API_URL}/notifications/read`
           
-        });
+        );
 
         return response.data;
     } catch (error) {
