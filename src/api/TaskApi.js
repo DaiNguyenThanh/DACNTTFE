@@ -149,8 +149,9 @@ export const UpdateTaskStage= async(id,position,pre_task_id,stage_id)=>{
         }
     }
 }
-export const PatchTask=async ({ id,assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id})=>{
+export const PatchTask=async ({ id,assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id,file_ids})=>{
     // Kiểm tra nếu các trường là null hoặc empty thì không gửi
+    
     const dataToSend = {
         ...(assignee_ids && { assignee_ids }),
         ...(collaborator_ids && { collaborator_ids }),
@@ -161,6 +162,7 @@ export const PatchTask=async ({ id,assignee_ids, collaborator_ids,deadline,descr
         ...(status && { status }),
         ...(title && { title }),
         ...(workspace_id && { workspace_id }),
+        ...(file_ids && { file_ids })
     };
 
     try {

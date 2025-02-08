@@ -36,6 +36,7 @@ const RequestPage = () => {
     const [form] = Form.useForm();
     const [requests, setRequests] = useState([]);
     const [requestDetail, setRequestDetail] = useState(null);
+    const [showDate, setShowDate] = useState(false);
 
     useEffect(() => {
         const fetchWorkspaces = async () => {
@@ -105,7 +106,7 @@ const RequestPage = () => {
             : true;
 
         return (activeTab === 'all' || item.status === activeTab) &&
-            item.reason.includes(searchText.toLowerCase()) &&
+            item?.reason?.includes(searchText.toLowerCase()) &&
             isInDateRange;
     });
 
@@ -316,11 +317,16 @@ const RequestPage = () => {
             <Modal title="Add New Request" visible={isModalVisible} onOk={handleOk} onCancel={() => setIsModalVisible(false)} width={600}>
                 <Form form={form} layout="vertical">
                     <Form.Item label="Type" name="type" rules={[{ required: true, message: 'Please select a type!' }]}>
-                        <Select placeholder="Select a type">
+                        <Select placeholder="Select a type" onChange={value => {
+                            form.setFieldsValue({ date: null }); // Reset date when type changes
+                            // Cập nhật trạng thái để ẩn/hiện trường date
+                            setShowDate(value === 'change-deadline');
+                        }}>
                             <Option value="change-deadline">Change Deadline</Option>
                             <Option value="make-done">Make Done</Option>
                         </Select>
                     </Form.Item>
+                  
                     <Form.Item label="Workspace" name="workspace_id" rules={[{ required: true, message: 'Please select a workspace!' }]}>
                         <Select placeholder="Select a workspace" onChange={handleWorkspaceChange} showSearch>
                             {workspaces.map(workspace => (
@@ -335,6 +341,7 @@ const RequestPage = () => {
                             ))}
                         </Select>
                     </Form.Item>
+                   
                     <Form.Item label="Task" name="task_id" rules={[{ required: true, message: 'Please select a task!' }]}>
                         <Select placeholder="Select a task" showSearch disabled={!selectedStage}>
                             {tasks.map(task => (
@@ -342,9 +349,11 @@ const RequestPage = () => {
                             ))}
                         </Select>
                     </Form.Item>
-                    <Form.Item label="Date" name="date" rules={[{ required: true, message: 'Please select the date!' }]}>
-                        <DatePicker style={{ width: '100%' }} />
-                    </Form.Item>
+                    {showDate && (
+                        <Form.Item label="Date and Time" name="date" rules={[{ required: true, message: 'Please select the date and time!' }]}>
+                            <DatePicker showTime style={{ width: '100%' }} />
+                        </Form.Item>
+                    )}
                     <Form.Item label="Reason" name="note" rules={[{ required: true, message: 'Please input the reason!' }]}>
                         <Input.TextArea  editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
                     </Form.Item>

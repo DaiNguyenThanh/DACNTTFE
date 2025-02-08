@@ -77,10 +77,24 @@ export const AuthProvider = ({ children }) => {
     navigate(path.LOGIN)
   };
 
+  const reload = async () => {
+    try {
+      const userInfo = await getUserInfoAPI();
+      if (userInfo.success) {
+        setUser(userInfo.data.data);
+      } else {
+        throw new Error('Failed to reload user information');
+      }
+    } catch (error) {
+      console.error('Error reloading user information:', error);
+    }
+  };
+
   const value = {
     user,
     login,
     logout,
+    reload,
   };
 
   return (

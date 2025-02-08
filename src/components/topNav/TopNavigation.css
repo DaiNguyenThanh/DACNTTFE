@@ -71,3 +71,16 @@
     color: #fff;
   }
 }
+.avatar-upload {
+  position: relative; /* Để định vị icon camera */
+  cursor: pointer; /* Thay đổi con trỏ chuột thành pointer */
+}
+
+.avatar-upload:hover::after {
+  content: '📷'; /* Biểu tượng camera */
+  position: absolute;
+  bottom: 0; /* Đặt vị trí icon camera */
+  right: 0; /* Đặt vị trí icon camera */
+  font-size: 24px; /* Kích thước icon camera */
+  transform: translate(50%, 50%); /* Định vị icon camera ở góc dưới bên phải */
+}
