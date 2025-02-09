@@ -23,6 +23,28 @@ export const ChangePassword = async ({ new_password, old_password }) => {
     }
   }
 };
+export const ForgotPassword = async ({ email, new_password }) => {
+  try {
+    
+    const response = await customAxios.post(`${API_URL}/auth/forgot-password`, {
+      email,
+      new_password
+    });
+    
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      // Lỗi từ server (status code không phải 2xx)
+      throw new Error(error.response.data.message || 'Change password failed');
+    } else if (error.request) {
+      // Không nhận được response
+      throw new Error('Không thể kết nối đến server');
+    } else {
+      // Lỗi khi setup request
+      throw new Error('Có lỗi xảy ra');
+    }
+  }
+};
 export const registerAPI = async ({ email, password, name }) => {
   try {
     
@@ -147,12 +169,16 @@ axiosInstance.interceptors.response.use(
   }
 ); 
 
-export const verifyOtpAPI = async ({ otp, email,is_verify_email
+export const verifyOtpAPI = async ({ otp, email,is_verify_email,is_forgot_password 
 }) => {
+  if(is_forgot_password ===null||is_forgot_password ===undefined){
+    is_forgot_password =false
+  }
   try {
     const response = await axios.post(`${API_URL}/auth/verify-otp`, {
       otp,
-      email,is_verify_email
+      email,is_verify_email,
+      is_forgot_password 
 
     });
     
@@ -168,10 +194,13 @@ export const verifyOtpAPI = async ({ otp, email,is_verify_email
   }
 };
 
-export const sendOtpAPI = async ({ email }) => {
+export const sendOtpAPI = async ({ email,is_forgot_password }) => {
   try {
+    if(is_forgot_password===null||is_forgot_password===undefined)
+      is_forgot_password=false
     const response = await axios.post(`${API_URL}/auth/send-otp`, {
-      email
+      email,
+      is_forgot_password
     });
     
     return response.data;

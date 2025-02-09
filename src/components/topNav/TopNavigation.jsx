@@ -20,6 +20,7 @@ import { GetUnreadCount, GetAllNotifications, ReadNotification } from '../../api
 import { CreateFile } from '../../api/fileAPI';
 import { patchUserAPI } from '../../api/adminUsers';
 import { ChangePassword } from '../../api/authApi';
+import { useForm } from 'antd/es/form/Form';
 const { Header } = Layout;
 const { Search } = Input;
 const { TabPane } = Tabs;
@@ -46,6 +47,7 @@ const TopNavigation = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userName, setUserName] = useState(user?.name || '');
+  const [changePasswordForm]=useForm()
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
@@ -63,7 +65,7 @@ const TopNavigation = () => {
     try {
       const response = await GetAllNotifications();
       // Lọc chỉ lấy các thông báo đã đọc
-      const readNotifications = response.data.filter(notification => notification.read === true);
+      const readNotifications = response.data.filter(notification => notification.read === false);
       setAllNotifications(readNotifications);
       if (response.message === "Success") {
         setUnreadCount(null);
@@ -75,7 +77,8 @@ const TopNavigation = () => {
   };
 
   const showModal = () => {
-    setIsEditing(false)
+    setIsEditing(false);
+    changePasswordForm.resetFields()
     setIsModalVisible(true);
   };
 
@@ -133,8 +136,11 @@ const TopNavigation = () => {
         await ChangePassword({ new_password: values.new_password, old_password: values.old_password });
         await reload();
         message.success('Password changed successfully');
+        changePasswordForm.resetFields()
+        
     } catch (error) {
         message.error('Error changing password: ' + error.message);
+        changePasswordForm.resetFields()
     }
   };
 
@@ -292,7 +298,7 @@ const TopNavigation = () => {
                 </Descriptions>
               </TabPane>
               <TabPane tab="Change Password" key="2">
-                <Form layout="vertical" onFinish={handleChangePassword}>
+                <Form layout="vertical" onFinish={handleChangePassword} form={changePasswordForm}>
                   <Form.Item label="Old Password" name="old_password" required>
                     <Input.Password
                       

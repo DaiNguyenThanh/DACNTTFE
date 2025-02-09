@@ -10,7 +10,10 @@ export const path = {
     CONFIGRRATION:'/configration',
     WORKSPACE:'/workspace',
     REQUEST:'/request',
-    ERROR:'/error'
+    ERROR:'/error',
+    RESETPASSWORD:'/reset-password',
+    VERIFY_OTP_PASSWORD:'/verify-otp-password'
+
 }
 export const role = {
     RoleAdmin: 'admin',

@@ -4,7 +4,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 const token = localStorage.getItem('token');
 
 
-export const CreateTask = async ({  assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id}) => {
+export const CreateTask = async ({  assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id,file_ids}) => {
    
     try {
         const response = await axios.post(`${API_URL}/tasks`, {
@@ -16,8 +16,8 @@ export const CreateTask = async ({  assignee_ids, collaborator_ids,deadline,desc
             stage_id:stage_id,
             status:status,
             title:title,
-            workspace_id:workspace_id
-          
+            workspace_id:workspace_id,
+            file_ids:file_ids
         });
         return response.data;
     } catch (error) {
@@ -56,7 +56,7 @@ export const GetAllTasks = async (stage_id, assignee_ids, collaborator_ids, dead
 }
 
 
-export const UpdateTask = async ({ id,assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id}) => {
+export const UpdateTask = async ({ id,assignee_ids, collaborator_ids,deadline,description,priority,stage_id,status,title,workspace_id,file_ids}) => {
     try {
         const response = await axios.put(`${API_URL}/tasks/${id}`, {
             assignee_ids: assignee_ids,
@@ -67,8 +67,8 @@ export const UpdateTask = async ({ id,assignee_ids, collaborator_ids,deadline,de
             stage_id:stage_id,
             status:status,
             title:title,
-            workspace_id:workspace_id
-          
+            workspace_id:workspace_id,
+            file_ids:file_ids
         });
         return response.data;
     } catch (error) {

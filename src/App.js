@@ -20,7 +20,9 @@ import VerifyOtpPage from './pages/VerifyOtp';
 import Configration from './pages/Configration';
 import RequestPage from './pages/Request';
 import ErrorPage from './pages/Error';
-
+import ForgotPassword from './pages/ForgotPassword'
+import VertifyOtpPasswordPage from './pages/VertifyOtpPassword';
+import ResetPassword from './pages/ResetPassword';
 import './App.css'
 import Dashboard from './pages/Dasboard';
 
@@ -59,6 +61,9 @@ const App = () => {
                 <Route path={path.LOGIN} element={<LoginPage />} />
                 <Route path={path.REGISTER} element={<RegisterPage />} />
                 <Route path={path.VERIFY_OTP} element={<VerifyOtpPage />} />
+                <Route path={path.FORGOT_PASSWORD} element={<ForgotPassword />} />
+                <Route path={path.VERIFY_OTP_PASSWORD} element={<VertifyOtpPasswordPage />} />
+                <Route path={path.RESETPASSWORD} element={<ResetPassword />} />
                 <Route path={path.ERROR} element={<ErrorPage />} />
               </Routes>
             </ConfigProvider>
