@@ -1,4 +1,5 @@
 import React, { useState,useContext,useEffect } from "react";
+import { useParams } from 'react-router-dom';
 import styled from "@emotion/styled";
 import Task from "./Task";
 import { Droppable, Draggable } from "react-beautiful-dnd";
@@ -10,8 +11,10 @@ import { GetUserAPI } from "../../api/adminUsers";
 import { UserContext } from "../../contexts/UserContext";
 import useUsers from '../../contexts/UserContext';
 import { CreateTask } from '../../api/TaskApi';
+import { CreateFile } from "../../api/fileAPI";
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { DeleteStages, UpdateStage } from '../../api/StageApi';
+
 import { role } from "../../utils";
 const Container = styled("div")`
   margin: 8px;
@@ -42,6 +45,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
   const {selectedWorkspace}=useWorkspace()
   const [isEditModalVisible, setIsEditModalStageVisible] = useState(false);
   const [stageName, setStageName] = useState(column.title);
+  const { workspaceId } = useParams();
   const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
   // Lấy thông tin người dùng từ localStorage
 
@@ -66,10 +70,22 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
 
   const handleOk = async () => {
     try {
-      const values = await form.validateFields();
       
-      const formattedDeadline = moment(values.deadline).format('YYYY-MM-DD HH:mm:ss');
-
+      let attachmentId = null;
+      const values = await form.validateFields();
+      const formattedDeadline = values.deadline.format('YYYY-MM-DD HH:mm:ss');
+      const attachmentIds = []; // Mảng để lưu trữ các ID file đã tạo
+      if (values.attachment && values.attachment.fileList.length > 0) {
+        
+          for (const file of values.attachment.fileList) {
+              const attachmentResponse = await CreateFile({ file: file.originFileObj, from: 'request' }); // Sử dụng file.originFileObj
+              if (attachmentResponse.message === "Success") {
+                  attachmentIds.push(attachmentResponse.data.id); // Thêm ID file vào mảng
+              }
+          }
+          attachmentId = attachmentIds; // Gán mảng ID file cho attachmentId
+      }
+      console.log(values.deadline)
       const response = await CreateTask({
         assignee_ids: values.assigners,
         collaborator_ids: values.collaborators,
@@ -79,7 +95,8 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
         title: values.title,
         stage_id: column.id,
         status: true,
-        workspace_id: selectedWorkspace
+        workspace_id: workspaceId,  
+        file_ids:attachmentIds.length>0?attachmentIds:undefined
       });
 
       // Cập nhật state starter với task mới
@@ -237,7 +254,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
                 </Select>
               </Form.Item>
               <Form.Item label="Deadline" name="deadline">
-                <DatePicker />
+                <DatePicker showTime format="YYYY-MM-DD HH:mm:ss"  />
               </Form.Item>
               <Form.Item label="Priority" name="priority">
                 <Select placeholder="Select priority">
@@ -249,7 +266,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
               <Form.Item name="attachment" label="Upload Attachment">
                 <Upload
                   beforeUpload={() => false}
-                  onChange={handleUploadChange}
+                 
                 >
                   <Button icon={<UploadOutlined />}>Click to Upload</Button>
                 </Upload>

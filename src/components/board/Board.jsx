@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
 import { useParams } from 'react-router-dom';
-import { Badge, Col, Row,Typography,Dropdown,Menu,Button,Popconfirm,Form,Modal,Input,Select,DatePicker,Upload } from 'antd';
+import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload } from 'antd';
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import moment from "moment";
@@ -11,9 +11,9 @@ import { GetAllTasks, UpdateTask, PatchTask, GetTask } from "../../api/TaskApi";
 import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
-import { UpdateTaskStage  } from "../../api/TaskApi";
+import { UpdateTaskStage } from "../../api/TaskApi";
 import { CreateFile } from "../../api/fileAPI";
-import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
 
 const Container = styled("div")`
@@ -25,17 +25,18 @@ const Container = styled("div")`
   min-width:300px
 `;
 
-const App = ({ filters,showHistoryDrawer }) => {
+const App = ({ filters, showHistoryDrawer }) => {
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
   const { addTaskForm } = useForm();
   const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
   const { workspaceId } = useParams();
-  const [IsEditModalVisible,setIsEditModalVisible]=useState(false);
+  const [IsEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [selectedTask,setSelectedTask]=useState(null)
+  const [selectedTask, setSelectedTask] = useState(null)
   const { users } = useUsers();
   const [fileList, setFileList] = useState([]);
+  let isRemovingFile = false; // Biến cờ để theo dõi việc xóa file
 
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
@@ -83,7 +84,7 @@ const App = ({ filters,showHistoryDrawer }) => {
           const stageTasks = allTasks[index].data;
           // Gắn tasks vào object tasks
           stageTasks.forEach((task) => {
-            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority ,description:task.description,assignee_ids:task.assignee_ids,collaborator_ids:task.collaborator_ids};
+            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority, description: task.description, assignee_ids: task.assignee_ids, collaborator_ids: task.collaborator_ids };
           });
 
           // Gắn cột vào object columns
@@ -228,7 +229,7 @@ const App = ({ filters,showHistoryDrawer }) => {
   };
   const handleDelete = async () => {
     try {
-      
+
     } catch (error) {
       console.error("Lỗi khi xóa stage:", error);
     }
@@ -270,7 +271,13 @@ const App = ({ filters,showHistoryDrawer }) => {
     const response = await GetTask(taskId); // Thay đổi ở đây
     setSelectedTask(response.data);
     setIsEditModalVisible(true);
-    console.log(response.data);
+    if(response.data?.files?.length>0){
+      setFileList(response.data.files)
+    }
+    else{
+      setFileList([])
+    }
+    console.log(fileList);
     // Reset các trường trong form
     form.resetFields();
 
@@ -282,19 +289,53 @@ const App = ({ filters,showHistoryDrawer }) => {
       collaborator_ids: response.data.collaborator_ids || [], // Nếu có trường collaborator_ids
       deadline: moment(response.data.deadline), // Chuyển đổi deadline sang định dạng moment
       priority: response.data.priority,
+      attachment: response.data.files
     });
   };
   const handleUploadChange = async (info) => {
-    
+    // Kiểm tra xem có phải là sự kiện xóa file không
+
+    if (isRemovingFile) {
+        isRemovingFile = false; // Reset biến cờ
+        return; // Ngăn chặn việc xử lý khi xóa file
+    }
+
     const { file } = info;
-    
-   const response= await CreateFile({file:file,from:"task"})
-        if (response.message === "Success") {
-            const fileId = response.data.id;
-            
-            await PatchTask({id:selectedTask.id, file_ids: [fileId] });
-        }
-   
+
+    // Kiểm tra nếu file đã được tải lên thành công
+
+    const response = await CreateFile({ file: file, from: "task" });
+    if (response.message === "Success") {
+        const fileId = response.data.id;
+
+        // Cập nhật fileList với file mới
+        setFileList(prevFileList => {
+            // Đảm bảo prevFileList là một mảng
+            const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
+            const updatedFileList = [
+                ...currentFileList,
+                { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
+            ];
+
+            // Gọi API để cập nhật task với file mới
+            PatchTask({ id: selectedTask.id, file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
+
+            return updatedFileList; // Trả về fileList đã cập nhật
+        });
+    }
+  };
+  const handleRemoveFile = async (file) => {
+    isRemovingFile = true; // Đánh dấu là đang xóa file
+    const updatedFileList = fileList.filter(item => item.id !== file.id); // Lọc file đã xóa
+    setFileList(updatedFileList); // Cập nhật lại fileList
+
+    // Nếu cần gọi API để xóa file, thực hiện ở đây
+    try {
+
+      await PatchTask({ id: selectedTask?.id, file_ids: updatedFileList?.map(item => item.id) }); // Cập nhật lại task với danh sách file mới
+    } catch (error) {
+      console.error("Lỗi khi xóa file:", error);
+    }
   };
 
   return isLoading ? (
@@ -366,7 +407,7 @@ const App = ({ filters,showHistoryDrawer }) => {
             </Select>
           </Form.Item>
           <Form.Item label="Deadline" name="deadline">
-            <DatePicker onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
+            <DatePicker showTime onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
           </Form.Item>
           <Form.Item label="Priority" name="priority">
             <Select placeholder="Select priority" onChange={(value) => handleFieldChange({ priority: value })}>
@@ -378,7 +419,16 @@ const App = ({ filters,showHistoryDrawer }) => {
           <Form.Item name="attachment" label="Upload Attachment">
             <Upload
               onChange={handleUploadChange}
-              fileList={fileList}
+              fileList={fileList?.map(file => ({
+                uid: file.id,
+                name: file.id,
+                status: 'done',
+                url: file.url,
+                onRemove: (file) => {
+                  handleRemoveFile(file); // Gọi hàm xóa file
+                  return false; // Trả về false để ngăn chặn onChange
+                },
+              }))}
               beforeUpload={() => false}
             >
               <Button icon={<UploadOutlined />}>Click to Upload</Button>

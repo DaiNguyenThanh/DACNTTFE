@@ -14,7 +14,8 @@ import {
     PieChartOutlined,
     PlusOutlined,
     EllipsisOutlined,
-    NumberOutlined
+    NumberOutlined,
+    UploadOutlined
 } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
@@ -37,6 +38,8 @@ const RequestPage = () => {
     const [requests, setRequests] = useState([]);
     const [requestDetail, setRequestDetail] = useState(null);
     const [showDate, setShowDate] = useState(false);
+    const [fileList, setFileList] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchWorkspaces = async () => {
@@ -156,33 +159,43 @@ const RequestPage = () => {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
+            setLoading(true);
             await handleSubmit(values);
             setIsModalVisible(false);
-
         } catch (error) {
             console.error('Validation failed:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSubmit = async (values) => {
         try {
             let attachmentId = null;
-
+            console.log(values.attachment)
             // Kiểm tra xem file có tồn tại hay không
-            if (values.attachment && values.attachment.length > 0) {
-                const attachmentResponse = await CreateFile({ file: values.attachment[0], from: 'request' }); // Sử dụng values.attachment[0] nếu là mảng
-                attachmentId = attachmentResponse.data.id;
+            const attachmentIds = []; // Mảng để lưu trữ các ID file đã tạo
+            if (values.attachment && values.attachment.fileList.length > 0) {
+              
+                for (const file of values.attachment.fileList) {
+                    const attachmentResponse = await CreateFile({ file: file.originFileObj, from: 'request' }); // Sử dụng file.originFileObj
+                    if (attachmentResponse.message === "Success") {
+                        attachmentIds.push(attachmentResponse.data.id); // Thêm ID file vào mảng
+                    }
+                }
+                attachmentId = attachmentIds; // Gán mảng ID file cho attachmentId
             }
 
             const formattedDate = moment(values.date).format('YYYY-MM-DD HH:mm:ss');
 
             const requestResponse = await CreateRequest({
-                attachment_ids: attachmentId ? [attachmentId] : undefined, // Chỉ thêm attachmentId nếu có
-                deadline: formattedDate,
+                attachment_ids: attachmentIds.length>0 ? attachmentIds : undefined, // Chỉ thêm attachmentId nếu có
+                //deadline: formattedDate,
                 reason: values.note,
                 task_id: values.task_id,
                 type: values.type,
-                workspace_id: values.workspace_id
+                workspace_id: values.workspace_id,
+                ...(values.type !== 'make-done' && { deadline: formattedDate }) 
             });
             form.resetFields()
             console.log('Request created successfully:', requestResponse);
@@ -191,8 +204,10 @@ const RequestPage = () => {
                 await fetchRequests();
                 message.success("Request created successfully!");
             }
+           
         } catch (error) {
             console.error('Error creating request:', error.message);
+            message.error(error.message)
         }
     };
 
@@ -208,7 +223,7 @@ const RequestPage = () => {
             console.log(`Request ${requestId} approved.`);
             if(response.message=="Success"){
                 fetchRequests()
-                message.success(`Request ${requestId} approved.`)
+                message.success(`Request Approved.`)
             }
         } catch (error) {
             console.error('Error approving request:', error.message);
@@ -225,7 +240,7 @@ const RequestPage = () => {
             
             if(response.message=="Success"){
                 fetchRequests()
-                message.success(`Request ${requestId} Rejected.`)
+                message.success(`Request Rejected.`)
             }
         } catch (error) {
             console.error('Error declining request:', error.message);
@@ -242,6 +257,12 @@ const RequestPage = () => {
             console.error('Error declining request:', error.message);
         }
     };
+
+    const handleUploadChange = (info) => {
+        let newFileList = [...info.fileList];
+        setFileList(newFileList);
+    };
+
     return (
         <div style={{ display: 'flex', margin: 16 }}>
 
@@ -314,7 +335,7 @@ const RequestPage = () => {
                     </Card>
                 )}
             </div>
-            <Modal title="Add New Request" visible={isModalVisible} onOk={handleOk} onCancel={() => setIsModalVisible(false)} width={600}>
+            <Modal title="Add New Request" visible={isModalVisible} onOk={handleOk} onCancel={() => setIsModalVisible(false)} width={600} okButtonProps={{ loading }}>
                 <Form form={form} layout="vertical">
                     <Form.Item label="Type" name="type" rules={[{ required: true, message: 'Please select a type!' }]}>
                         <Select placeholder="Select a type" onChange={value => {
@@ -360,11 +381,28 @@ const RequestPage = () => {
                     {/* <Form.Item label="Reason" name="reason">
                         <Editor editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
                     </Form.Item> */}
-                    <Form.Item label="Attachment" name="attachment">
-                        <Upload beforeUpload={() => false}>
-                            <Button>Upload File</Button>
+                    <Form.Item name="attachment" label="Upload Attachment">
+                        <Upload
+                            onChange={handleUploadChange}
+                            fileList={fileList}
+                            beforeUpload={() => false}
+                        >
+                            <Button icon={<UploadOutlined />}>Click to Upload</Button>
                         </Upload>
                     </Form.Item>
+
+                    {fileList.length > 0 && (
+                        <div>
+                            <h4>Uploaded File IDs:</h4>
+                            <ul>
+                                {fileList.map((file) => (
+                                    <li key={file.uid}>File ID: {file.uid}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                  
 
                 </Form>
             </Modal>

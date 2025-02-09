@@ -9,11 +9,15 @@ import {
 import KanbanBoard from '../components/board/Board';
 import { useWorkspace } from "../contexts/WorkspaceProvider";
 import { GetAllTaskHistorys, GetTaskHistory } from '../api/taskHistoryApi';
+import { useParams } from 'react-router-dom';
+import { GetWorkspaceDetailAPI } from '../api/workspaceApi';
 
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isHistoryDrawerVisible, setIsHistoryDrawerVisible] = useState(false);
-  const { selectedWorkspace,selectedWorkspaceName } = useWorkspace();
+  const { workspaceId } = useParams();
+  const [workspace, setWorkspace] = useState(null);
+  //const { selectedWorkspace,selectedWorkspaceName } = useWorkspace();
   const [trackingHistory, setTrackingHistory] = useState([]);
   const [filters, setFilters] = useState({
     noMember: false,
@@ -125,11 +129,25 @@ const columns = [
     }
 ];
 
+  useEffect(() => {
+    const fetchWorkspaceDetails = async () => {
+      try {
+        const workspaceDetails = await GetWorkspaceDetailAPI(workspaceId);
+        // Xử lý dữ liệu chi tiết workspace nếu cần
+        setWorkspace(workspaceDetails.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy chi tiết workspace:", error);
+      }
+    };
+
+    fetchWorkspaceDetails(); // Gọi hàm khi component được mount
+  }, [workspaceId]); // Chạy lại khi workspaceId thay đổi
+
   return (
     <div >
       <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16,paddingTop:16, backgroundColor: '#ffffff3d' }}>
         <Col style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <h3>{selectedWorkspaceName}</h3>
+          <h3>{workspace?.name}</h3>
           <Button type="secondary" shape="circle" icon={<StarOutlined />} />
         </Col>
         <Col style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
