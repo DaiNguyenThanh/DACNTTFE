@@ -14,7 +14,9 @@ import {
     UpOutlined,
     DownOutlined,
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    DashboardOutlined,
+    SolutionOutlined
 } from '@ant-design/icons';
 import { Button, Layout, Menu, Divider, Avatar, Typography, Modal, Form, Input, Select, Dropdown, Popconfirm, Radio, message, Checkbox, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -246,14 +248,14 @@ const LeftMenu = () => {
         },
         {
             key: '2',
-            icon: <MailOutlined />,
+            icon: <DashboardOutlined />,
             label: "Dashboard",
             target: path.DASHBOARD,
             hidden: userRole !== role.RoleAdmin
         },
         {
             key: '3',
-            icon: <CalendarOutlined />,
+            icon: <SolutionOutlined />,
             label: 'Request',
             target: path.REQUEST,
         },
