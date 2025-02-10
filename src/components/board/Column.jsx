@@ -149,8 +149,19 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
     try {
       await UpdateStage({ id: column.id, name: stageName });
 
+      // Cập nhật lại state starter với tên mới
+      setStarter((prev) => ({
+        ...prev,
+        columns: {
+          ...prev.columns,
+          [column.id]: {
+            ...prev.columns[column.id],
+            title: stageName, // Cập nhật tên cột với tên mới
+          },
+        },
+      }));
+
       setIsEditModalStageVisible(false);
-     
       await updateColumns();
     } catch (error) {
       console.error("Lỗi khi cập nhật stage:", error);
