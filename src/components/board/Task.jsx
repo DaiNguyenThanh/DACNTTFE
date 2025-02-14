@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { Draggable } from "react-beautiful-dnd";
 import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload } from 'antd';
-import { PlusOutlined, UploadOutlined, EditOutlined, EllipsisOutlined, HistoryOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, EditOutlined, EllipsisOutlined, HistoryOutlined, DeleteOutlined,CommentOutlined  } from '@ant-design/icons';
 import moment from "moment";
 import { CreateTask, DeleteTasks } from '../../api/TaskApi';
 import { useAuth } from "../../contexts/AuthContext";
@@ -16,7 +16,7 @@ const Container = styled("div")`
   background: ${props => (props.isDragging ? "lightgreen" : "white")};
 `;
 
-const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter }) => {
+const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter,showCommentModal }) => {
   const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
   // Lấy thông tin người dùng từ localStorage
 
@@ -86,6 +86,13 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter }) => {
                     <Menu.Item>
                       <Button 
                         type="link" 
+                        onClick={() => showCommentModal(task.id)} 
+                        icon={<CommentOutlined  style={{ color: 'yellow' }} />}
+                      />
+                    </Menu.Item>
+                    <Menu.Item>
+                      <Button 
+                        type="link" 
                         onClick={() => showHistoryDrawer(task.id)} 
                         icon={<HistoryOutlined style={{ color: 'green' }} />}
                       />
@@ -102,6 +109,7 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter }) => {
                       )}
                      
                     </Menu.Item>
+                  
                   </Menu>
                 }
                 overlayStyle={{ zIndex: 9999 }}

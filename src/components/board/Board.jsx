@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
 import { useParams } from 'react-router-dom';
-import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload } from 'antd';
+import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload, Avatar } from 'antd';
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import moment from "moment";
@@ -13,8 +13,9 @@ import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
 import { UpdateTaskStage } from "../../api/TaskApi";
 import { CreateFile } from "../../api/fileAPI";
-import { PlusOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, EditOutlined, SendOutlined,PaperClipOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
+import { useAuth } from "../../contexts/AuthContext";
 
 const Container = styled("div")`
   display: flex;
@@ -37,6 +38,42 @@ const App = ({ filters, showHistoryDrawer }) => {
   const { users } = useUsers();
   const [fileList, setFileList] = useState([]);
   let isRemovingFile = false; // Biến cờ để theo dõi việc xóa file
+  const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [fileName, setFileName] = useState("");
+
+
+  const [comments, setComments] = useState([
+    {
+      id: 1,
+      user: { name: "Alice", avatar: "https://i.pravatar.cc/40?img=1" },
+      text: "This is a comment with an image.",
+      created_at: moment().subtract(5, "minutes").toISOString(),
+      fileUrl: "https://via.placeholder.com/100", // Hình ảnh
+    },
+    {
+      id: 2,
+      user: { name: "Bob", avatar: "https://i.pravatar.cc/40?img=2" },
+      text: "Here's a document you might find useful.",
+      created_at: moment().subtract(10, "minutes").toISOString(),
+      fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", // File PDF
+    },
+    {
+      id: 3,
+      user: { name: "Charlie", avatar: "https://i.pravatar.cc/40?img=3" },
+      text: "No attachments here, just a message.",
+      created_at: moment().subtract(15, "minutes").toISOString(),
+    },
+    {
+      id: 4,
+      user: { name: "David", avatar: "https://i.pravatar.cc/40?img=4" },
+      text: "Check out this cool GIF!",
+      created_at: moment().subtract(20, "minutes").toISOString(),
+      fileUrl: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif", // GIF
+    },
+  ]);
+  const currentUser = useAuth()
 
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
@@ -271,10 +308,10 @@ const App = ({ filters, showHistoryDrawer }) => {
     const response = await GetTask(taskId); // Thay đổi ở đây
     setSelectedTask(response.data);
     setIsEditModalVisible(true);
-    if(response.data?.files?.length>0){
+    if (response.data?.files?.length > 0) {
       setFileList(response.data.files)
     }
-    else{
+    else {
       setFileList([])
     }
     console.log(fileList);
@@ -296,8 +333,8 @@ const App = ({ filters, showHistoryDrawer }) => {
     // Kiểm tra xem có phải là sự kiện xóa file không
 
     if (isRemovingFile) {
-        isRemovingFile = false; // Reset biến cờ
-        return; // Ngăn chặn việc xử lý khi xóa file
+      isRemovingFile = false; // Reset biến cờ
+      return; // Ngăn chặn việc xử lý khi xóa file
     }
 
     const { file } = info;
@@ -306,22 +343,22 @@ const App = ({ filters, showHistoryDrawer }) => {
 
     const response = await CreateFile({ file: file, from: "task" });
     if (response.message === "Success") {
-        const fileId = response.data.id;
+      const fileId = response.data.id;
 
-        // Cập nhật fileList với file mới
-        setFileList(prevFileList => {
-            // Đảm bảo prevFileList là một mảng
-            const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
-            const updatedFileList = [
-                ...currentFileList,
-                { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
-            ];
+      // Cập nhật fileList với file mới
+      setFileList(prevFileList => {
+        // Đảm bảo prevFileList là một mảng
+        const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
+        const updatedFileList = [
+          ...currentFileList,
+          { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
+        ];
 
-            // Gọi API để cập nhật task với file mới
-            PatchTask({ id: selectedTask.id, file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
+        // Gọi API để cập nhật task với file mới
+        PatchTask({ id: selectedTask.id, file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
 
-            return updatedFileList; // Trả về fileList đã cập nhật
-        });
+        return updatedFileList; // Trả về fileList đã cập nhật
+      });
     }
   };
   const handleRemoveFile = async (file) => {
@@ -337,7 +374,45 @@ const App = ({ filters, showHistoryDrawer }) => {
       console.error("Lỗi khi xóa file:", error);
     }
   };
+  const showCommentModal = async (taskId) => {
+    // Fetch comments for the task
+    // const response = await GetTaskComments(taskId); // Assume you have an API to get comments
+    //setComments(response.data);
+    setIsCommentModalVisible(true);
+  };
 
+  const handleCommentSubmit = (values) => {
+    // const newComment = {
+    //   id: comments.length + 1,
+    //   user: { name: "You", avatar: "https://i.pravatar.cc/40?img=5" },
+    //   text: values.comment,
+    //   created_at: new Date().toISOString(),
+    //   fileUrl: file ? (filePreview ? filePreview : file.name) : null,
+    //   fileName: file ? file.name : null,
+    // };
+    // setComments([...comments, newComment]);
+
+    // Reset file
+    setFile(null);
+    setFilePreview(null);
+    setFileName("");
+  };
+  const handleFileChange = (info) => {
+    const selectedFile = info.fileList[0]?.originFileObj;
+  console.log(selectedFile)
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
+  
+      // Kiểm tra nếu là ảnh thì tạo URL preview
+      if (selectedFile.type.startsWith("image/")) {
+        setFilePreview(URL.createObjectURL(selectedFile));
+      } else {
+        setFilePreview(null);
+      }
+    }
+  };
+  
   return isLoading ? (
     <div>Loading...</div>
   ) : (
@@ -366,6 +441,7 @@ const App = ({ filters, showHistoryDrawer }) => {
                     showEditModal={showEditModal}
                     showHistoryDrawer={showHistoryDrawer}
                     setStarter={setStarter}
+                    showCommentModal={showCommentModal}
                   />
                 );
               })}
@@ -436,6 +512,89 @@ const App = ({ filters, showHistoryDrawer }) => {
           </Form.Item>
         </Form>
       </Modal>
+      <Modal
+      title="Comments"
+      open={isCommentModalVisible}
+      onCancel={() => setIsCommentModalVisible(false)}
+      footer={null}
+    >
+      <div style={{ maxHeight: "500px", overflowY: "auto", marginBottom: "16px" }}>
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <div
+              key={comment.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 0",
+                borderBottom: "1px solid #ddd",
+              }}
+            >
+              <Avatar src={comment.user.avatar} size="small" />
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0 }}>
+                  <strong>{comment.user.name}:</strong> {comment.text}
+                </p>
+                {comment.fileUrl && (
+                  <div style={{ marginTop: "5px" }}>
+                    {comment.fileUrl.endsWith(".pdf") ||
+                    comment.fileUrl.endsWith(".docx") ? (
+                      <a href={comment.fileUrl} target="_blank" rel="noopener noreferrer">
+                        📄 {comment.fileName}
+                      </a>
+                    ) : (
+                      <img
+                        src={comment.fileUrl}
+                        alt="Attachment"
+                        style={{ maxWidth: "100px", display: "block", marginTop: "5px" }}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+              <small style={{ whiteSpace: "nowrap", color: "#888" }}>
+                {moment(comment.created_at).fromNow()}
+              </small>
+            </div>
+          ))
+        ) : (
+          <p style={{ textAlign: "center", color: "#888" }}>No comments yet.</p>
+        )}
+      </div>
+
+      <Form onFinish={handleCommentSubmit}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Avatar src="https://i.pravatar.cc/40?img=5" size="small" />
+          <Form.Item
+            name="comment"
+            style={{ flex: 1, marginBottom: 0 }}
+            rules={[{ required: true, message: "Please input your comment!" }]}
+          >
+            <Input.TextArea rows={1} placeholder="Add a comment" autoSize={{ minRows: 1, maxRows: 3 }} />
+          </Form.Item>
+          <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
+            <Button icon={<PaperClipOutlined />} />
+          </Upload>
+          <Button type="primary" htmlType="submit" icon={<SendOutlined />} />
+        </div>
+        
+        {/* Hiển thị tên file hoặc hình preview */}
+        {fileName && (
+          <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            {filePreview ? (
+              <img
+                src={filePreview}
+                alt="Preview"
+                style={{ maxWidth: "300px", maxHeight: "200px", borderRadius: "4px" ,margin:24}}
+              />
+            ) : (
+              <span>📄 {fileName}</span>
+            )}
+          </div>
+        )}
+      </Form>
+    </Modal>
     </>
 
   );
