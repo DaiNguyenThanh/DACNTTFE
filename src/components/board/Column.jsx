@@ -38,7 +38,7 @@ const TaskList = styled("div")`
   background-color: ${props =>
     props.isDraggingOver ? "palevioletred" : "white"};
 `;
-const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer,setStarter}) => {
+const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer,setStarter,showCommentModal}) => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
@@ -224,7 +224,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
               {Array.isArray(tasks) && tasks.length > 0 ? (
                 tasks.map((task, index) => (
                   task && task.id ? (
-                    <Task key={task.id} task={task} index={index} showEditModal={showEditModal} showHistoryDrawer={showHistoryDrawer} setStarter={setStarter} />
+                    <Task key={task.id} task={task} index={index} showEditModal={showEditModal} showHistoryDrawer={showHistoryDrawer} setStarter={setStarter} showCommentModal={showCommentModal} />
                   ) : null
                 ))
               ) : (
