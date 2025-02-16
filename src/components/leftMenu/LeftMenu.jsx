@@ -241,18 +241,18 @@ const LeftMenu = () => {
         }
     };
     const menuItems = [
-        {
-            key: '1',
-            icon: <MailOutlined />,
-            label: "Home",
-            target: path.HOME
-        },
+        // {
+        //     key: '1',
+        //     icon: <MailOutlined />,
+        //     label: "Home",
+        //     target: path.HOME
+        // },
         {
             key: '2',
             icon: <DashboardOutlined />,
             label: "Dashboard",
             target: path.DASHBOARD,
-            hidden: userRole !== role.RoleAdmin
+            hidden: ![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
         },
         {
             key: '3',
@@ -272,7 +272,7 @@ const LeftMenu = () => {
                     label: '+ New workspace',
                     onClick: showModal,
                     style: { color: "#686868", fontSize: "11px" },
-                    hidden:userRole !== role.RoleAdmin
+                    hidden:![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
                 },
                
                 ...workspaceList.map(workspace => ({
@@ -322,7 +322,7 @@ const LeftMenu = () => {
             icon: <SettingOutlined />,
             label: "Configration",
             target: path.CONFIGRRATION,
-            hidden:userRole !== role.RoleAdmin
+            hidden:![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
         },
     ];
 
