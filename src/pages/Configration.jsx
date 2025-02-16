@@ -26,8 +26,8 @@ const Configration = () => {
     const navigate = useNavigate();
    const { user}= useAuth()
    useEffect(() => {
-    if(user?.role!== role.RoleAdmin){
-        navigate(path.ERROR)
+    if (![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)) {
+        navigate(path.ERROR);
     }
    },[user,navigate]);
     useEffect(() => {
