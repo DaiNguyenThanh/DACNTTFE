@@ -7,7 +7,7 @@ import { Dropdown, Menu, Popconfirm, Button, Col, Row, Modal, Form, Input, Selec
 import moment from "moment";
 import { PlusOutlined, UploadOutlined,EditOutlined } from '@ant-design/icons';
 
-import { GetUserAPI } from "../../api/adminUsers";
+import { getListUserAPI } from "../../api/authApi";
 import { UserContext } from "../../contexts/UserContext";
 import useUsers from '../../contexts/UserContext';
 import { CreateTask } from '../../api/TaskApi';
@@ -38,9 +38,9 @@ const TaskList = styled("div")`
   background-color: ${props =>
     props.isDraggingOver ? "palevioletred" : "white"};
 `;
-const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer,setStarter,showCommentModal}) => {
+const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,showHistoryDrawer,setStarter,showCommentModal,users}) => {
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const [users, setUsers] = useState([]);
+  //const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
   const {selectedWorkspace}=useWorkspace()
   const [isEditModalVisible, setIsEditModalStageVisible] = useState(false);
@@ -50,18 +50,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
   // Lấy thông tin người dùng từ localStorage
 
   const userRole = user ? user.role : null;
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await GetUserAPI();
-        setUsers(response.data.items);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách người dùng:", error);
-      }
-    };
-
-    fetchUsers();
-  }, []);
+ 
 
   const showModal = () => {
     form.resetFields()
@@ -252,14 +241,14 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal,sh
               </Form.Item>
               <Form.Item label="Assigners" name="assigners">
                 <Select placeholder="Select assigners" mode="multiple">
-                  {users.length > 0 ? users.map(user => (
+                  {users?.length > 0 ? users?.map(user => (
                     <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
                   )) : <Select.Option disabled>No users available</Select.Option>}
                 </Select>
               </Form.Item>
               <Form.Item label="Collaborators" name="collaborators">
                 <Select placeholder="Select collaborators" mode="multiple">
-                  {users.length > 0 ? users.map(user => (
+                  {users?.length > 0 ? users?.map(user => (
                     <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
                   )) : <Select.Option disabled>No users available</Select.Option>}
                 </Select>

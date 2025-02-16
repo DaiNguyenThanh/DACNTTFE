@@ -89,19 +89,19 @@ const LeftMenu = () => {
         fetchWorkspaces(); // Gọi hàm fetchWorkspaces khi component được mount
     }, []); 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await GetUserAPI();
-                console.log(response.data.items)
-                setUsers(response.data.items);
-            } catch (error) {
-                console.error("Lỗi khi lấy danh sách người dùng:", error);
-            }
-        };
+       
 
-        fetchUsers();
+       
     }, []);
-
+    const fetchUsers = async () => {
+        try {
+            const response = await GetUserAPI();
+            console.log(response.data.items)
+            setUsers(response.data.items);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách người dùng:", error);
+        }
+    };
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
@@ -116,7 +116,8 @@ const LeftMenu = () => {
     }, []);
 
     const showModal = () => {
-        workspaceform.resetFields()
+        workspaceform.resetFields();
+        fetchUsers();
         setTodoStates([''])
         setIsModalVisible(true);
     };

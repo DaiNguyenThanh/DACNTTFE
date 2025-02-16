@@ -5,7 +5,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { WorkspaceProvider } from './contexts/WorkspaceProvider';
-import { UserProvider } from './contexts/UserContext';
+//import { UserProvider } from './contexts/UserContext';
 import { ConfigProvider } from 'antd';
 import MainLayout from './components/layout/MainLayout';
 
@@ -48,7 +48,7 @@ const App = () => {
     <Router>
       <AuthProvider>
         <WorkspaceProvider>
-          <UserProvider >
+          {/* <UserProvider > */}
             <ConfigProvider theme={theme}>
               <Routes>
                 <Route path="/" element={<MainLayout />}>
@@ -67,7 +67,7 @@ const App = () => {
                 <Route path={path.ERROR} element={<ErrorPage />} />
               </Routes>
             </ConfigProvider>
-          </UserProvider>
+          {/* </UserProvider> */}
         </WorkspaceProvider>
       </AuthProvider>
     </Router>
