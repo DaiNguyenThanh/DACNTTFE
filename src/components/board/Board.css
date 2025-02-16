@@ -78,3 +78,34 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     border-color: #bbb;
   }
+  .custom-mentions .ant-mentions-wrapper {
+    width: 100%;
+  }
+  
+  .custom-mentions .ant-mentions {
+    background-color: #f5f5f5;
+    border-radius: 6px;
+  }
+  
+  .custom-mentions .ant-mentions-mentions {
+    color: #333;
+  }
+  
+  .custom-mentions .ant-mentions-mentions__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .custom-mentions .ant-mentions-mentions__option-selected {
+    background-color: #e6f7ff !important;
+  }
+  
+  .custom-mentions .ant-mentions-mentions__option:hover {
+    background-color: #bae7ff !important;
+  }
+  
+  .custom-mentions .ant-mentions .ant-mentions-mentions__option-content {
+    font-weight: bold;
+    color: #1890ff;
+  }
