@@ -28,7 +28,7 @@ import { Color } from 'antd/es/color-picker';
 import { GetUserAPI } from '../../api/adminUsers';
 import { GetAllSubjectAPI } from '../../api/subjectApi';
 import { CreateWorkSpace, DeleteWorkSpace, GetWorkSpace, GetWorkspaceDetailAPI, UpdateWorkSpace } from '../../api/workspaceApi';
-import { GetAllWorkSpaces } from '../../api/workspaceApi'; // Import API để lấy danh sách workspace
+import { GetWorkSpaceMe } from '../../api/workspaceApi'; // Import API để lấy danh sách workspace
 import { useWorkspace } from '../../contexts/WorkspaceProvider'; // Nhập useWorkspace
 import styled from 'styled-components'; // Đảm bảo bạn đã import styled-components
 import { useAuth } from '../../contexts/AuthContext';
@@ -70,12 +70,12 @@ const LeftMenu = () => {
     const [editingWorkspace, setEditingWorkspace] = useState(null); // Thêm state để lưu workspace đang chỉnh sửa
     const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
     // Lấy thông tin người dùng từ localStorage
-    
+    const {workspaces}=useWorkspace()
     const userRole = user ? user.role : null;
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
-                const response = await GetAllWorkSpaces(); // Gọi API để lấy danh sách workspace
+                const response = await GetWorkSpaceMe(); // Gọi API để lấy danh sách workspace
                 if (response.error_code==0) { // Kiểm tra phản hồi
                     setworkspaceList(response.data); // Giả sử response.data chứa danh sách workspace
                 } else {

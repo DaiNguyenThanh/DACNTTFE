@@ -6,7 +6,7 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { CreateFile } from '../api/fileAPI';
 import { CreateRequest } from '../api/requestAPI';
 import { useWorkspace } from '../contexts/WorkspaceProvider';
-import { GetAllWorkSpaces, GetWorkspaceDetailAPI } from '../api/workspaceApi';
+import { GetWorkSpaceMe, GetWorkspaceDetailAPI } from '../api/workspaceApi';
 import { GetAllTasks } from '../api/TaskApi';
 import { GetAllRequest, GetRequest, ConfirmRequest, DeleteRequest } from '../api/requestAPI';
 import { CreateComment ,GetAllComments} from '../api/commentAPI';
@@ -65,7 +65,7 @@ const RequestPage = () => {
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
-                const data = await GetAllWorkSpaces();
+                const data = await GetWorkSpaceMe();
                 if (Array.isArray(data.data)) {
                     setWorkspaces(data.data);
                 } else {
