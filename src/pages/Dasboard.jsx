@@ -50,6 +50,8 @@ const Dashboard = () => {
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
                 borderWidth: 1,
+                barThickness: 5, // Độ dày cột cố định
+                maxBarThickness: 10, // Độ dày tối đa của cột
             }
 
         ],
@@ -61,9 +63,12 @@ const Dashboard = () => {
     const [allCharts, setAllCharts] = useState([]);
     const [editingChart, setEditingChart] = useState(null);
     const navigate = useNavigate();
-    const { user}=useAuth()
+    const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+    // Lấy thông tin người dùng từ localStorage
+    
+    const userRole = user ? user.role : null;
     useEffect(() => {
-     if (![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)) {
+     if (![role.RoleAdmin, role.RoleSubjectManager].includes(userRole)) {
          navigate(path.ERROR);
      }
     },[user,navigate]);
@@ -133,6 +138,7 @@ const Dashboard = () => {
             x: {
                 barThickness: 5, // Chiều rộng cột cố định
                 maxBarThickness: 10, // Chiều rộng cột tối đa
+                
             }
         }
     };
@@ -442,7 +448,7 @@ const Dashboard = () => {
                             </Col>
                         ))}
                 </Row>
-                <Row gutter={[16, 16]} justify={'start'} style={{flexWrap:'nowrap',overflowX:'scroll'}}>
+                <Row gutter={[32, 16]} justify={'start'} style={{flexWrap:'nowrap',overflowX:'scroll'}}>
                     {allCharts.filter(chart => chart.type !== 'number').map((chart, index) => {
                         const processedChart = processChartData(chart);
 
@@ -459,7 +465,7 @@ const Dashboard = () => {
 
                         return (
                             <Col key={index} span={8}>
-                                <div style={{ height: '400px', minWidth: '500px', backgroundColor: 'white', padding: 16, position: 'relative' }}>
+                                <div style={{ height: '400px', minWidth: '400px', backgroundColor: 'white', padding: 16, position: 'relative' }}>
                                     <Dropdown overlay={menu} trigger={['click']} placement="bottomRight">
                                         <Button shape="circle" icon={<EllipsisOutlined />} style={{ position: 'absolute', top: 8, right: 8 }} />
                                     </Dropdown>

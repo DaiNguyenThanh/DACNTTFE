@@ -20,7 +20,8 @@ import {
     UploadOutlined,
     UserOutlined,
     PaperClipOutlined,
-    SendOutlined
+    SendOutlined,
+    EyeOutlined 
 } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 import { useAuth } from '../contexts/AuthContext';
@@ -188,8 +189,14 @@ const RequestPage = () => {
             title: 'Action',
             dataIndex: 'detail',
             render: (text, record) => (
-                <a onClick={() => handleRowClick(record)}>Detail</a>
-            ),
+                <Button 
+                  //type="primary" 
+                  icon={<EyeOutlined />} 
+                  onClick={() => handleRowClick(record)}
+                >
+                  Detail
+                </Button>
+              ),
         },
     ];
 

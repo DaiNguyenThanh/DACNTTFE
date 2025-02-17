@@ -150,9 +150,9 @@ const TopNavigation = () => {
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={showModal}>
         Profile
       </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />}>
+      {/* <Menu.Item key="settings" icon={<SettingOutlined />}>
         Setting
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Divider />
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={logout}>
         Logout
