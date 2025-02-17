@@ -192,13 +192,13 @@ const TopNavigation = () => {
   return (
     <Header className="header">
       <div className="header-left">
-
+{/* 
         <Search
           placeholder="Tìm kiếm..."
           allowClear
           onSearch={value => console.log(value)}
           style={{ width: 250, marginRight: 20 }}
-        />
+        /> */}
 
       </div>
       <div className="header-right">

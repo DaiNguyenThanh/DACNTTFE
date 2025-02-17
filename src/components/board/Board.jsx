@@ -35,7 +35,7 @@ const App = ({ filters, showHistoryDrawer }) => {
   const { user } = useAuth()
   const [addTaskForm ] = useForm();
   const [commentForm]=useForm()
-  const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
+  const { noMember, assignedToMe, noDates, overdue, dueNextDay, dueNextWeek,dueNextMonth,low, medium, high,markComplete ,markNotComplete} = filters;
   const { workspaceId } = useParams();
   const [IsEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
@@ -78,19 +78,50 @@ const App = ({ filters, showHistoryDrawer }) => {
         const response = await GetWorkspaceDetailAPI(workspaceId);
         //setUsers(response.data.users)
         const stages = response.data.stages || [];
-        const deadline_from = moment().format("DD/MM/YYYY")
-        const deadline_to = moment().format("DD/MM/YYYY")
-        let priotiry = "low"
-        const status = false
-        const assignee_ids = []
-        const collaborator_ids = []
-        // if (noDates) {
-        //   deadline_from = undefined;
-        //   deadline_to = undefined;
-        // } else if (dueNextDay) {
-        //   deadline_from = new Date();
-        //   deadline_to.setDate(deadline_to.getDate() + 1); // Cộng thêm 1 ngày
-        // }
+        let deadline_from = moment();
+        let deadline_to = moment();
+        let priotiry = "";
+        const status = false;
+        const assignee_ids = [];
+        const collaborator_ids = [];
+        if(noMember){
+          assignee_ids=undefined
+        }
+        if(assignedToMe){
+          assignee_ids.push(user?.id)
+        }
+        
+        if (noDates) {
+          deadline_from = undefined;
+          deadline_to = undefined;
+        } 
+        if (overdue) {
+          deadline_from = undefined;
+          deadline_to = moment().subtract(1, 'days'); // Lùi lại 1 ngày
+        }
+        
+        if (dueNextDay) {
+          deadline_from = moment();
+          deadline_to = moment().add(1, 'days'); // Cộng thêm 1 ngày
+        }
+        
+        if (dueNextWeek) {
+          deadline_from = moment();
+          deadline_to = moment().add(1, 'weeks'); // Cộng thêm 7 ngày
+        }
+        
+        if (dueNextMonth) {
+          deadline_from = moment();
+          deadline_to = moment().add(1, 'months'); // Cộng thêm 30 ngày
+        }
+        
+        // Format lại ngày nếu cần
+        if (deadline_from) {
+          deadline_from = deadline_from.format("DD/MM/YYYY");
+        }
+        if (deadline_to) {
+          deadline_to = deadline_to.format("DD/MM/YYYY");
+        }
         if (low) {
           priotiry = "low"
         }
@@ -99,6 +130,12 @@ const App = ({ filters, showHistoryDrawer }) => {
         }
         if (high) {
           priotiry = "high"
+        }
+        if(markComplete){
+          status=true
+        }
+        if(markNotComplete){
+          status=false
         }
         // Thêm logic để query API với deadline
         const allTasks = await Promise.all(
@@ -138,7 +175,7 @@ const App = ({ filters, showHistoryDrawer }) => {
     };
 
     fetchWorkspaceDetails();
-  }, [workspaceId, noDates, dueNextDay, low, medium, high]);
+  }, [workspaceId, noDates, dueNextDay, low, medium, high,markComplete,dueNextWeek,dueNextMonth,markNotComplete,noMember,assignedToMe,overdue]);
 
   useEffect(() => {
     console.log("Danh sách người dùng đã thay đổi:", users);

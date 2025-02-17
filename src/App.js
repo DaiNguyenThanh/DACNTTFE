@@ -54,7 +54,7 @@ const App = () => {
                 <Route path="/" element={<MainLayout />}>
                   <Route path={path.WORKSPACE + "/:workspaceId"} element={<MainBoard />} />
                   <Route path={path.DASHBOARD} element={<Dashboard />} />
-                  <Route index path={path.HOME} element={<Dashboard />} />
+                  <Route index path={path.HOME} element={<Home />} />
                   <Route path={path.CONFIGRRATION} element={<Configration />} />
                   <Route path={path.REQUEST} element={<RequestPage />} />
                 </Route>

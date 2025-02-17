@@ -87,7 +87,7 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter,showCom
                       <Button 
                         type="link" 
                         onClick={() => showCommentModal(task.id)} 
-                        icon={<CommentOutlined  style={{ color: 'yellow' }} />}
+                        icon={<CommentOutlined  style={{ color: 'violet' }} />}
                       />
                     </Menu.Item>
                     <Menu.Item>

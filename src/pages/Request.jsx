@@ -158,7 +158,7 @@ const RequestPage = () => {
             title: 'Reason',
             dataIndex: 'reason',
             render: (text, record) => (
-                <a onClick={() => handleRowClick(record)}>{text}</a>
+                text
             ),
         },
         {
@@ -176,13 +176,20 @@ const RequestPage = () => {
                 <Badge count={text} style={{ backgroundColor: text === 'rejected' ? '#f5222d' : text === 'pending' ? '#faad14' : '#52c41a' }} />
             ),
         },
-        {
-            title: 'Approver',
-            dataIndex: 'ApproveBy',
-        },
+        // {
+        //     title: 'Approver',
+        //     dataIndex: 'ApproveBy',
+        // },
         {
             title: 'Date',
             dataIndex: 'created_at',
+        },
+        {
+            title: 'Action',
+            dataIndex: 'detail',
+            render: (text, record) => (
+                <a onClick={() => handleRowClick(record)}>Detail</a>
+            ),
         },
     ];
 
@@ -375,7 +382,7 @@ const RequestPage = () => {
                 <Row gutter={[8, 8]}>
                     <Col>
                         <Input
-                            placeholder="Search by title"
+                            placeholder="Search by type"
                             value={searchText}
                             onChange={e => setSearchText(e.target.value)}
                             style={{ marginBottom: '10px' }}
