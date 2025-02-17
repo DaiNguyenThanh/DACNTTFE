@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { GetAllWorkSpaces } from '../api/workspaceApi';
+import { GetWorkSpaceMe } from '../api/workspaceApi';
 
 const WorkspaceContext = createContext();
 
@@ -11,7 +11,7 @@ export const WorkspaceProvider = ({ children }) => {
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
-                const response = await GetAllWorkSpaces();
+                const response = await GetWorkSpaceMe();
                 setWorkspaces(response.data);
                 
             } catch (error) {

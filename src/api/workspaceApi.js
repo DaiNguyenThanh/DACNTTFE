@@ -55,7 +55,20 @@ export const GetWorkSpace = async (id) => {
         }
     }
 }
-
+export const GetWorkSpaceMe = async (id) => {
+    try {
+        const response = await axios.get(`${API_URL}/workspaces/me`);
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Get workspace failed');
+        } else if (error.request) {
+            throw new Error('Cannot connect to server');
+        } else {
+            throw new Error('An error occurred');
+        }
+    }
+}
 export const UpdateWorkSpace = async ({ id,
     name,
     user_ids,
