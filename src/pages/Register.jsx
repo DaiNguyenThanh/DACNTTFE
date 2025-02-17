@@ -64,7 +64,7 @@ const Register = () => {
       });
       console.log(result)
 
-      if (result.status == 200) {
+      if (result.message == "Success") {
         const otpResult = await sendOtpAPI({ email });
         localStorage.setItem('tempEmail', email)
         message.success('Registration successful! Please vertify.');
@@ -131,7 +131,7 @@ const Register = () => {
               { required: true, message: 'Please enter your password!' },
               { min: 6, message: 'Password must be at least 6 characters!' },
               {
-                pattern: /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>])/, 
+                pattern: /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>])/,
                 message: 'Password must contain at least one uppercase letter, one number, and one special character!'
               }
             ]}

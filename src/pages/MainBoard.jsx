@@ -4,7 +4,8 @@ import {
   StarOutlined,
   EllipsisOutlined,
   FilterOutlined,
-  UserOutlined
+  UserOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import KanbanBoard from '../components/board/Board';
 import { useWorkspace } from "../contexts/WorkspaceProvider";
@@ -30,7 +31,9 @@ const MainBoard = () => {
     low: false,
     medium: false,
     high: false,
-    status: false
+    status: false,
+    dueNextWeek:false,
+    dueNextMonth:false
   });
   
   const showDrawer = () => {
@@ -142,7 +145,22 @@ const columns = [
 
     fetchWorkspaceDetails(); // Gọi hàm khi component được mount
   }, [workspaceId]); // Chạy lại khi workspaceId thay đổi
-
+  const clearFilter =()=>{
+    setFilters({
+      assignedToMe: false,
+      noDates: false,
+      overdue: false,
+      dueNextDay: false,
+      markComplete: false,
+      markNotComplete: false,
+      low: false,
+      medium: false,
+      high: false,
+      status: false,
+      dueNextWeek:false,
+      dueNextMonth:false
+    })
+  }
   return (
     <div >
       <Row justify="space-between" style={{ paddingRight: 16, paddingLeft: 16,paddingTop:16, backgroundColor: '#ffffff3d' }}>
@@ -153,10 +171,10 @@ const columns = [
         <Col style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <Row style={{ backgroundColor: '#2f80ed' }} >
             <Button type="primary" onClick={showDrawer} icon={<FilterOutlined />}>Filter</Button>
-            <Badge count={1} style={{
+            <Badge count={Object.values(filters).filter(value => value === true).length} style={{
               backgroundColor: '#52c41a',
             }} /> 
-            <Button type="primary">Clear All</Button>
+            <Button type="primary" color='red' icon={<CloseCircleOutlined />}  onClick={clearFilter}>Clear All</Button>
           </Row>
         
          
@@ -199,10 +217,10 @@ const columns = [
               <Checkbox name="dueNextDay" checked={filters.dueNextDay} onChange={handleCheckboxChange}>Due in next day</Checkbox>
             </Col>
             <Col span={24}>
-              <Checkbox name="dueNextDay" checked={filters.dueNextDay} onChange={handleCheckboxChange}>Due in next week</Checkbox>
+              <Checkbox name="dueNextWeek" checked={filters.dueNextWeek} onChange={handleCheckboxChange}>Due in next week</Checkbox>
             </Col>
             <Col span={24}>
-              <Checkbox name="dueNextDay" checked={filters.dueNextDay} onChange={handleCheckboxChange}>Due in next month</Checkbox>
+              <Checkbox name="dueNextMonth" checked={filters.dueNextMonth} onChange={handleCheckboxChange}>Due in next month</Checkbox>
             </Col>
           </Row>
         </div>
@@ -224,10 +242,10 @@ const columns = [
           <h4>Marked</h4>
           <Row>
             <Col span={24}>
-              <Checkbox name="Complete" checked={filters.markComplete} onChange={handleCheckboxChange}>Marked as completed</Checkbox>
+              <Checkbox name="markComplete" checked={filters.markComplete} onChange={handleCheckboxChange}>Marked as completed</Checkbox>
             </Col>
             <Col span={24}>
-              <Checkbox name="NotComplete" checked={filters.markNotComplete} onChange={handleCheckboxChange}>Not marked as completed</Checkbox>
+              <Checkbox name="markNotComplete" checked={filters.markNotComplete} onChange={handleCheckboxChange}>Not marked as completed</Checkbox>
             </Col>
 
           </Row>

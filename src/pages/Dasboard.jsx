@@ -12,7 +12,11 @@ import {
     NumberOutlined
 } from '@ant-design/icons';
 import { useWorkspace } from '../contexts/WorkspaceProvider'; // Import hook useWorkspace
+import { path, role } from '../utils';
+
+import { useNavigate } from 'react-router-dom'; 
 import { Chart, registerables } from 'chart.js';
+import { useAuth } from '../contexts/AuthContext';
 Chart.register(...registerables);
 
 ChartJS.register(
@@ -56,10 +60,16 @@ const Dashboard = () => {
     const [isFirstRender, setIsFirstRender] = useState(true);
     const [allCharts, setAllCharts] = useState([]);
     const [editingChart, setEditingChart] = useState(null);
-
+    const navigate = useNavigate();
+    const { user}=useAuth()
+    useEffect(() => {
+     if (![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)) {
+         navigate(path.ERROR);
+     }
+    },[user,navigate]);
     useEffect(() => {
         console.log(workspaces);
-        if (workspaces.length > 0) {
+        if (workspaces?.length > 0) {
             setworkspace_ids([workspaces[0].id]); // Đặt phần tử đầu tiên làm giá trị mặc định
         }
 

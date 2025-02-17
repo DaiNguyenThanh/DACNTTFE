@@ -241,12 +241,12 @@ const LeftMenu = () => {
         }
     };
     const menuItems = [
-        // {
-        //     key: '1',
-        //     icon: <MailOutlined />,
-        //     label: "Home",
-        //     target: path.HOME
-        // },
+        {
+            key: '1',
+            icon: <MailOutlined />,
+            label: "Home",
+            target: path.HOME
+        },
         {
             key: '2',
             icon: <DashboardOutlined />,
