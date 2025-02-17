@@ -14,8 +14,9 @@
 ## Cài đặt
 Yêu cầu: Node.js >= 18.x và npm .
 Cài đặt dependencies: npm install
-Chạy ứng dụng: npm start
+Chạy ứng dụng: npm run start
 Cấu hình môi trường: REACT_APP_API_URL=https://api.example.com
 
 ## Build và Deploy
 Build ứng dụng cho môi trường production: npm run build 
+
