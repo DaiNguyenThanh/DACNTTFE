@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
 import { useParams } from 'react-router-dom';
-import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload } from 'antd';
+import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload, Avatar, Mentions } from 'antd';
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import moment from "moment";
@@ -12,10 +12,14 @@ import { useWorkspace } from "../../contexts/WorkspaceProvider";
 import { useForm } from "antd/es/form/Form";
 import { UpdatePosition } from "../../api/TaskApi";
 import { UpdateTaskStage } from "../../api/TaskApi";
+import { getListUserAPI } from "../../api/authApi";
 import { CreateFile } from "../../api/fileAPI";
-import { PlusOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
+import { CreateComment, GetComment, GetAllComments } from "../../api/commentAPI";
+import { PlusOutlined, UploadOutlined, EditOutlined, SendOutlined, PaperClipOutlined, UserOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
+import { useAuth } from "../../contexts/AuthContext";
 
+const { Option } = Mentions;
 const Container = styled("div")`
   display: flex;
   background-color: ${(props) => (props.isDraggingOver ? "#639ee2" : "#f4f5f7")};
@@ -28,16 +32,43 @@ const Container = styled("div")`
 const App = ({ filters, showHistoryDrawer }) => {
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
-  const { addTaskForm } = useForm();
+  const { user } = useAuth()
+  const [addTaskForm ] = useForm();
+  const [commentForm]=useForm()
   const { noMember, assignedToMe, noDates, overdue, dueNextDay, low, medium, high } = filters;
   const { workspaceId } = useParams();
   const [IsEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedTask, setSelectedTask] = useState(null)
-  const { users } = useUsers();
+  const [users, setUsers] = useState([]);
   const [fileList, setFileList] = useState([]);
   let isRemovingFile = false; // Biến cờ để theo dõi việc xóa file
+  const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
+  const [file, setFile] = useState(null);
+  const [filePreviews, setFilePreviews] = useState(null);
+  const [fileNames, setFileNames] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([])
+  const [mentionedUsers, setMentionedUsers] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [commentTextToSend, setCommentTextToSend] = useState("");
+  const [taskId, setTaskId] = useState(null)
+  const [comments, setComments] = useState([
+  ]);
+  const currentUser = useAuth()
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
 
+        const response = await getListUserAPI(workspaceId);
+        setUsers(response.data.data);
+        console.log(users)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
       if (!workspaceId) return;
@@ -45,6 +76,7 @@ const App = ({ filters, showHistoryDrawer }) => {
 
       try {
         const response = await GetWorkspaceDetailAPI(workspaceId);
+        //setUsers(response.data.users)
         const stages = response.data.stages || [];
         const deadline_from = moment().format("DD/MM/YYYY")
         const deadline_to = moment().format("DD/MM/YYYY")
@@ -110,6 +142,7 @@ const App = ({ filters, showHistoryDrawer }) => {
 
   useEffect(() => {
     console.log("Danh sách người dùng đã thay đổi:", users);
+
     // Bạn có thể thực hiện các hành động khác ở đây nếu cần
   }, [users]);
 
@@ -271,10 +304,10 @@ const App = ({ filters, showHistoryDrawer }) => {
     const response = await GetTask(taskId); // Thay đổi ở đây
     setSelectedTask(response.data);
     setIsEditModalVisible(true);
-    if(response.data?.files?.length>0){
+    if (response.data?.files?.length > 0) {
       setFileList(response.data.files)
     }
-    else{
+    else {
       setFileList([])
     }
     console.log(fileList);
@@ -296,8 +329,8 @@ const App = ({ filters, showHistoryDrawer }) => {
     // Kiểm tra xem có phải là sự kiện xóa file không
 
     if (isRemovingFile) {
-        isRemovingFile = false; // Reset biến cờ
-        return; // Ngăn chặn việc xử lý khi xóa file
+      isRemovingFile = false; // Reset biến cờ
+      return; // Ngăn chặn việc xử lý khi xóa file
     }
 
     const { file } = info;
@@ -306,22 +339,22 @@ const App = ({ filters, showHistoryDrawer }) => {
 
     const response = await CreateFile({ file: file, from: "task" });
     if (response.message === "Success") {
-        const fileId = response.data.id;
+      const fileId = response.data.id;
 
-        // Cập nhật fileList với file mới
-        setFileList(prevFileList => {
-            // Đảm bảo prevFileList là một mảng
-            const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
-            const updatedFileList = [
-                ...currentFileList,
-                { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
-            ];
+      // Cập nhật fileList với file mới
+      setFileList(prevFileList => {
+        // Đảm bảo prevFileList là một mảng
+        const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
+        const updatedFileList = [
+          ...currentFileList,
+          { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
+        ];
 
-            // Gọi API để cập nhật task với file mới
-            PatchTask({ id: selectedTask.id, file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
+        // Gọi API để cập nhật task với file mới
+        PatchTask({ id: selectedTask.id, file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
 
-            return updatedFileList; // Trả về fileList đã cập nhật
-        });
+        return updatedFileList; // Trả về fileList đã cập nhật
+      });
     }
   };
   const handleRemoveFile = async (file) => {
@@ -337,7 +370,106 @@ const App = ({ filters, showHistoryDrawer }) => {
       console.error("Lỗi khi xóa file:", error);
     }
   };
+  const showCommentModal = async (taskId) => {
+    // Fetch comments for the task
+    setTaskId(taskId);
+    setFileList([]);
+    setFilePreviews(null);
+    setFileNames([]);
+    setCommentText("")
+    setIsCommentModalVisible(true);
+    try {
+      const response = await GetAllComments(taskId, "task"); // Assume you have an API to get comments
+      setComments(response.data);
 
+    }
+    catch (e) {
+      console.log("Get comment failed: ", e)
+    }
+  };
+
+  const handleCommentSubmit = async (values) => {
+    setCommentText("");
+     commentForm.resetFields()
+    try {
+   
+      const uploadedFiles = [];
+     
+
+      for (const file of fileList) {
+        const response = await CreateFile({ file: file, from: "comment" }); // Chờ từng file upload xong
+        uploadedFiles.push(response.data); // Lưu kết quả response
+      }
+      const response = await CreateComment({ content: commentText, file_ids: uploadedFiles.map(f => f.id), mention_ids: mentionedUsers.map(user => user.key), object_id: taskId, source: "task" })
+      if (response && response.data) {
+        setComments(prevComments => [response.data, ...prevComments]); // Thêm comment mới vào danh sách
+      }
+
+    }
+    catch (e) {
+
+    }
+    // const newComment = {
+    //   id: comments.length + 1,
+    //   user: { name: "You", avatar: "https://i.pravatar.cc/40?img=5" },
+    //   text: values.comment,
+    //   created_at: new Date().toISOString(),
+    //   fileUrl: file ? (filePreview ? filePreview : file.name) : null,
+    //   fileName: file ? file.name : null,
+    // };
+    // setComments([...comments, newComment]);
+
+    // Reset file
+    setFile(null);
+    setFilePreviews(null);
+    setFileNames([]);
+  };
+  const handleFileChange = (info) => {
+    const newFiles = info.fileList.map(file => file.originFileObj); // Lấy tất cả các file
+
+    if (newFiles.length > 0) {
+      setFileList(newFiles); // Lưu danh sách file vào state
+      setFileNames(newFiles.map(file => file.name)); // Lưu danh sách tên file
+
+      // Tạo preview cho file ảnh
+      const previews = newFiles.map(file =>
+        file.type.startsWith("image/") ? URL.createObjectURL(file) : null
+      );
+      setFilePreviews(previews);
+    }
+  };
+  const handleMentionSelect = (user) => {
+    console.log(user)
+
+    if (user && !mentionedUsers.some(u => u.key === user.key)) {
+      setMentionedUsers([...mentionedUsers, user]);
+      setCommentTextToSend((prev) => prev + ` <${user.key}>`);
+      setCommentText(commentText + user.value)
+    }
+
+    console.log(mentionedUsers)
+  };
+  const handleCommentChange = (value) => {
+    setCommentText(value);
+    setCommentTextToSend(replaceNamesWithIds(value)); // Cập nhật text gửi đi
+    console.log(commentTextToSend)
+    console.log(commentText)
+
+  };
+  const replaceNamesWithIds = (text) => {
+    let newText = text;
+    if (Array.isArray(users)) {
+      users.forEach((user) => {
+        const regex = new RegExp(`@${user.name}\\b`, "g"); // Tìm đúng @TênUser
+        newText = newText.replace(regex, `<${user.id}>`); // Thay thế bằng @<ID>
+      });
+    }
+    
+    return newText;
+  };
+  const highlightMentions = (text) => {
+    return text.replace(/@([\wÀ-ỹ\d]+)/g, '<span style="color: blue;">@$1</span>');
+  };
   return isLoading ? (
     <div>Loading...</div>
   ) : (
@@ -366,6 +498,8 @@ const App = ({ filters, showHistoryDrawer }) => {
                     showEditModal={showEditModal}
                     showHistoryDrawer={showHistoryDrawer}
                     setStarter={setStarter}
+                    showCommentModal={showCommentModal}
+                    users={users}
                   />
                 );
               })}
@@ -389,8 +523,8 @@ const App = ({ filters, showHistoryDrawer }) => {
               onChange={(value) => handleFieldChange({ assignee_ids: value })}
               value={selectedTask?.assignee_ids || []}
             >
-              {users.length > 0 ? users.map(user => (
-                <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+              {users?.length > 0 ? users?.map(user => (
+                <Select.Option key={user?.id} value={user?.id}>{user?.name}</Select.Option>
               )) : <Select.Option disabled>No users available</Select.Option>}
             </Select>
           </Form.Item>
@@ -401,8 +535,8 @@ const App = ({ filters, showHistoryDrawer }) => {
               onChange={(value) => handleFieldChange({ collaborator_ids: value })}
               value={selectedTask?.collaborator_ids || []}
             >
-              {users.length > 0 ? users.map(user => (
-                <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+              {users?.length > 0 ? users?.map(user => (
+                <Select.Option key={user?.id} value={user?.id}>{user?.name}</Select.Option>
               )) : <Select.Option disabled>No users available</Select.Option>}
             </Select>
           </Form.Item>
@@ -435,6 +569,144 @@ const App = ({ filters, showHistoryDrawer }) => {
             </Upload>
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        title="Comments"
+        open={isCommentModalVisible}
+        onCancel={() => setIsCommentModalVisible(false)}
+        footer={null}
+      >
+        <Form onFinish={handleCommentSubmit} form={commentForm}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Avatar src={user?.avatar} size="small" icon={!user?.avatar && <UserOutlined />} />
+            <Form.Item
+              name="comment"
+              style={{ flex: 1, marginBottom: 0 }}
+            //rules={[{ required: true, message: "Please input your comment!" }]}
+            >
+              <Mentions
+                //dangerouslySetInnerHTML={{ __html: highlightMentions(commentText) }}
+                rows={1}
+                placeholder="Add a comment"
+                autoSize={{ minRows: 1, maxRows: 3 }}
+                value={commentText}
+                onChange={handleCommentChange}
+                onSelect={handleMentionSelect}
+                style={{ width: "100%" }}
+                className="custom-mentions"
+              >
+                {Array.isArray(users) && users.length > 0 ? (
+                  users.map((user) => (
+                    <Option key={user.id} value={user.name}>
+                      <Avatar
+                        size="small"
+                        src={user.avatar || <UserOutlined />}
+                        style={{ marginRight: 8 }}
+                      />
+                      {user.name}
+                    </Option>
+                  ))
+                ) : (
+                  <Option disabled>No Data</Option>
+                )}
+
+              </Mentions>
+              {/* <p
+                style={{ margin: 0 }}
+                dangerouslySetInnerHTML={{ __html: highlightMentions(commentText) }}
+              ></p> */}
+            </Form.Item>
+            <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
+              <Button icon={<PaperClipOutlined />} />
+            </Upload>
+            <Button type="primary" htmlType="submit" icon={<SendOutlined />} />
+          </div>
+
+          {/* Hiển thị tên file hoặc hình preview */}
+          {fileNames.length > 0 && (
+            <div
+              style={{
+                marginLeft: 16,
+                marginTop: "8px",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "8px",
+                maxHeight: 300
+              }}
+            >
+              {fileNames.map((name, index) => (
+                <div key={index} style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: 'wrap' }}>
+                  {filePreviews[index] ? (
+                    <img
+                      src={filePreviews[index]}
+                      alt="Preview"
+                      style={{
+                        maxWidth: "150px",
+                        maxHeight: "150px",
+                        borderRadius: "4px",
+                        margin: "8px",
+                      }}
+                    />
+                  ) : (
+                    <span>📄 {name}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+        </Form>
+        <div style={{ maxHeight: "500px", overflowY: "auto", marginBottom: "16px" }}>
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <div
+                key={comment.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 0",
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0 }}>
+                    <Avatar src={comment?.user?.avatar} size="small" icon={!comment?.user?.avatar && <UserOutlined />}  /> <strong>{comment?.user?.name}:</strong> {comment?.content}
+                  </p>
+                  {comment.files && comment.files.length > 0 && (
+                    <div style={{ marginTop: "5px", margin: 8 }}>
+                      {comment.files.map((file, index) => (
+                        file.path.endsWith(".jpg") || file.path.endsWith(".png") ? (
+                          <a key={index} href={file.path} target="_blank" rel="noopener noreferrer" download>
+                            <img
+                              src={file.path}
+                              alt="Attachment"
+                              style={{ maxWidth: "100px", display: "block", marginTop: "5px" }}
+                            />
+                          </a>
+                        ) : (
+                          <a key={index} href={file.path} target="_blank" rel="noopener noreferrer">
+                            📄 {file?.filename || "attachment"}
+                          </a>
+
+                        )
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <small style={{ whiteSpace: "nowrap", color: "#888" }}>
+                {moment.utc(comment.created_at, "YYYY-MM-DD HH:mm:ss").fromNow()}
+                </small>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#888" }}>No comments yet.</p>
+          )}
+        </div>
+
+
       </Modal>
     </>
 

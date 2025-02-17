@@ -240,3 +240,23 @@ export const getUserInfoAPI = async () => {
   }
 };
 
+export const getListUserAPI = async (workspaceId)=> {
+  try {
+   
+    
+    const response = await customAxios.get(`${API_URL}/users/workspace/${workspaceId}`, {
+    });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to get user information');
+    } else if (error.request) {
+      throw new Error('Cannot connect to server');
+    } else {
+      throw new Error('An error occurred');
+    }
+  }
+};

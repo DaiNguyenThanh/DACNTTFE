@@ -89,19 +89,19 @@ const LeftMenu = () => {
         fetchWorkspaces(); // Gọi hàm fetchWorkspaces khi component được mount
     }, []); 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await GetUserAPI();
-                console.log(response.data.items)
-                setUsers(response.data.items);
-            } catch (error) {
-                console.error("Lỗi khi lấy danh sách người dùng:", error);
-            }
-        };
+       
 
-        fetchUsers();
+       
     }, []);
-
+    const fetchUsers = async () => {
+        try {
+            const response = await GetUserAPI();
+            console.log(response.data.items)
+            setUsers(response.data.items);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách người dùng:", error);
+        }
+    };
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
@@ -116,7 +116,8 @@ const LeftMenu = () => {
     }, []);
 
     const showModal = () => {
-        workspaceform.resetFields()
+        workspaceform.resetFields();
+        fetchUsers();
         setTodoStates([''])
         setIsModalVisible(true);
     };
@@ -240,18 +241,18 @@ const LeftMenu = () => {
         }
     };
     const menuItems = [
-        {
-            key: '1',
-            icon: <MailOutlined />,
-            label: "Home",
-            target: path.HOME
-        },
+        // {
+        //     key: '1',
+        //     icon: <MailOutlined />,
+        //     label: "Home",
+        //     target: path.HOME
+        // },
         {
             key: '2',
             icon: <DashboardOutlined />,
             label: "Dashboard",
             target: path.DASHBOARD,
-            hidden: userRole !== role.RoleAdmin
+            hidden: ![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
         },
         {
             key: '3',
@@ -271,7 +272,7 @@ const LeftMenu = () => {
                     label: '+ New workspace',
                     onClick: showModal,
                     style: { color: "#686868", fontSize: "11px" },
-                    hidden:userRole !== role.RoleAdmin
+                    hidden:![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
                 },
                
                 ...workspaceList.map(workspace => ({
@@ -321,7 +322,7 @@ const LeftMenu = () => {
             icon: <SettingOutlined />,
             label: "Configration",
             target: path.CONFIGRRATION,
-            hidden:userRole !== role.RoleAdmin
+            hidden:![role.RoleAdmin, role.RoleSubjectManager].includes(user?.role)
         },
     ];
 
