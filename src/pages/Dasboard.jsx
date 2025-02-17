@@ -12,7 +12,11 @@ import {
     NumberOutlined
 } from '@ant-design/icons';
 import { useWorkspace } from '../contexts/WorkspaceProvider'; // Import hook useWorkspace
+import { path, role } from '../utils';
+
+import { useNavigate } from 'react-router-dom'; 
 import { Chart, registerables } from 'chart.js';
+import { useAuth } from '../contexts/AuthContext';
 Chart.register(...registerables);
 
 ChartJS.register(
@@ -36,7 +40,7 @@ const Dashboard = () => {
     const [extra_group_field, setextra_group_field] = useState("status")
     const [group_field, setGroupField] = useState("priority")
     const [sub_group_field, setSubGroupField] = useState("by_day")
-    const [stage_ids, setSstage_ids] = useState()
+    const [stage_ids, setSstage_ids] = useState([])
     const [ChartData, setChartData] = useState({
         labels: [],
         datasets: [
@@ -46,6 +50,8 @@ const Dashboard = () => {
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
                 borderWidth: 1,
+                barThickness: 5, // Độ dày cột cố định
+                maxBarThickness: 10, // Độ dày tối đa của cột
             }
 
         ],
@@ -56,10 +62,19 @@ const Dashboard = () => {
     const [isFirstRender, setIsFirstRender] = useState(true);
     const [allCharts, setAllCharts] = useState([]);
     const [editingChart, setEditingChart] = useState(null);
-
+    const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+    // Lấy thông tin người dùng từ localStorage
+    
+    const userRole = user ? user.role : null;
+    useEffect(() => {
+     if (![role.RoleAdmin, role.RoleSubjectManager].includes(userRole)) {
+         navigate(path.ERROR);
+     }
+    },[user,navigate]);
     useEffect(() => {
         console.log(workspaces);
-        if (workspaces.length > 0) {
+        if (workspaces?.length > 0) {
             setworkspace_ids([workspaces[0].id]); // Đặt phần tử đầu tiên làm giá trị mặc định
         }
 
@@ -67,13 +82,11 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStage = async () => {
             const response = await GetAllStages();
-
-            setListStage(response.data || []); // Cập nhật listStage
-
-
+            setListStage(response.data); // Cập nhật listStage
+            console.log(listStage)
         };
         fetchStage();
-    }, []);
+    }, [workspace_ids]);
 
     useEffect(() => {
         if (isFirstRender) {
@@ -125,6 +138,7 @@ const Dashboard = () => {
             x: {
                 barThickness: 5, // Chiều rộng cột cố định
                 maxBarThickness: 10, // Chiều rộng cột tối đa
+                
             }
         }
     };
@@ -216,7 +230,7 @@ const Dashboard = () => {
         drawChart();
     }, [newChartData]);
     const fetchChart = async () => {
-        
+        try{
         if(group_field==="created_at"||group_field==="deadline"){
             const response = await GetReport(extra_group_field, group_field, stage_ids,sub_group_field, chartType, workspace_ids)
              setnewChartData(response.data)
@@ -224,7 +238,9 @@ const Dashboard = () => {
             const response = await GetReport(extra_group_field, group_field, stage_ids,null, chartType, workspace_ids)
             setnewChartData(response.data)
         }
-        
+    }catch(e){
+        message.error("Get report failed, please try again")
+    }
     }
 
     
@@ -405,6 +421,14 @@ const Dashboard = () => {
         });
     };
 
+    const handleChangeWorkspace = (value) => {
+        setworkspace_ids(value); // Cập nhật workspace_ids
+    };
+
+    const handleChangeStage = (value) => {
+        setSstage_ids(value); // Cập nhật stage_ids
+    };
+
     return (
         <div style={{ margin: 16 }}>
             <Button type="primary" onClick={showModal} style={{ marginBottom: 8 }}>
@@ -424,7 +448,7 @@ const Dashboard = () => {
                             </Col>
                         ))}
                 </Row>
-                <Row gutter={[16, 16]} justify={'start'} style={{flexWrap:'nowrap',overflowX:'scroll'}}>
+                <Row gutter={[32, 16]} justify={'start'} style={{flexWrap:'nowrap',overflowX:'scroll'}}>
                     {allCharts.filter(chart => chart.type !== 'number').map((chart, index) => {
                         const processedChart = processChartData(chart);
 
@@ -441,7 +465,7 @@ const Dashboard = () => {
 
                         return (
                             <Col key={index} span={8}>
-                                <div style={{ height: '400px', minWidth: '500px', backgroundColor: 'white', padding: 16, position: 'relative' }}>
+                                <div style={{ height: '400px', minWidth: '400px', backgroundColor: 'white', padding: 16, position: 'relative' }}>
                                     <Dropdown overlay={menu} trigger={['click']} placement="bottomRight">
                                         <Button shape="circle" icon={<EllipsisOutlined />} style={{ position: 'absolute', top: 8, right: 8 }} />
                                     </Dropdown>
@@ -456,7 +480,7 @@ const Dashboard = () => {
 
             </div>
             <Modal
-                title={editingChart ? "Chỉnh sửa biểu đồ" : "New Chart"}
+                title={editingChart ? "Edit Chart" : "New Chart"}
                 visible={isModalVisible}
                 onOk={handleOk}
                 onCancel={() => { setIsModalVisible(false); setEditingChart(null); }}
@@ -498,10 +522,12 @@ const Dashboard = () => {
                                             </Text>
                                         </div>
                                         <Select style={{ width: '100%', marginBottom: 16 }} onChange={(value) => { handleChangeExtraGroup(value) }} value={extra_group_field}>
-                                            {["workspace_id", "status", "priority", "deadline", "created_at"].filter(option => option !== group_field).map(option => (
-                                                <Select.Option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</Select.Option>
-                                            ))}
-                                        </Select>
+    {["workspace_id", "status", "priority", "deadline", "created_at"].filter(option => option !== group_field).map(option => (
+        <Select.Option key={option} value={option}>
+            {option === "workspace_id" ? "Workspace" : option === "created_at" ? "Created At" : option.charAt(0).toUpperCase() + option.slice(1)}
+        </Select.Option>
+    ))}
+</Select>
                                         {(group_field === "created_at" ||group_field === "deadline")  && (
                                             <Select style={{ width: '100%', marginBottom: 16 }} onChange={(value) => { setSubGroupField(value); fetchChart() }} value={sub_group_field}>
                                                 <Select.Option value="by_day">By Day</Select.Option>
@@ -528,20 +554,21 @@ const Dashboard = () => {
                                             Workspace
                                         </Text>
                                     </div>
-                                    <Select style={{ width: '100%', marginBottom: 16 }} onChange={(value) => { setworkspace_ids(value) }}  >
-                                        {workspaces.map(workspace => (
+                                    <Select mode="multiple" style={{ width: '100%', marginBottom: 16 }} onChange={handleChangeWorkspace} >
+                                        {workspaces?.map(workspace => (
                                             <Select.Option key={workspace.id} value={workspace.id}>{workspace.name}</Select.Option>
                                         ))}
                                     </Select>
                                     <div>
                                         <Text type="secondary" strong>
-                                            Stage
+                                            Stage 
                                         </Text>
                                     </div>
-                                    <Select style={{ width: '100%', marginBottom: 16 }} onChange={(value) => { setSstage_ids(value) }}  >
-                                        {listStage.map(stage => {
+                                    <Select mode="multiple" style={{ width: '100%', marginBottom: 16 }} onChange={handleChangeStage} >
+                                        {listStage?.map(stage => (
                                             <Select.Option key={stage.id} value={stage.id}>{stage.name}</Select.Option>
-                                        })}
+                                        ))}
+                                       
                                     </Select>
 
                                     {/* <Button variant='outlined' icon={<PlusOutlined />}>New</Button> */}

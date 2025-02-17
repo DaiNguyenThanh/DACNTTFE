@@ -6,10 +6,10 @@ export const GetReport = async (extra_group_field, group_field, stage_ids, sub_g
         const params = {};
         if (extra_group_field) params.extra_group_field = extra_group_field;
         if (group_field) params.group_field = group_field;
-        if (stage_ids) params.stage_ids = stage_ids;
+        if (Array.isArray(stage_ids) && stage_ids.length > 0) params.stage_ids = stage_ids;
+        if (Array.isArray(workspace_ids) && workspace_ids.length > 0) params.workspace_ids = workspace_ids;
         if (sub_group_field) params.sub_group_field = sub_group_field;
         if (type) params.type = type;
-        if (workspace_ids) params.workspace_ids = workspace_ids;
 
         const queryString = new URLSearchParams(params).toString();
         const response = await axios.get(`${API_URL}/reports?${queryString}`);

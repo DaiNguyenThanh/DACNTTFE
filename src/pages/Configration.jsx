@@ -24,10 +24,14 @@ const Configration = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userForm] = Form.useForm();
     const navigate = useNavigate();
-   const { user}= useAuth()
+   //const { user}= useAuth()
+   const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
+   // Lấy thông tin người dùng từ localStorage
+   
+   const userRole = user ? user.role : null;
    useEffect(() => {
-    if(user?.role!== role.RoleAdmin){
-        navigate(path.ERROR)
+    if (![role.RoleAdmin, role.RoleSubjectManager].includes(userRole)) {
+        navigate(path.ERROR);
     }
    },[user,navigate]);
     useEffect(() => {
