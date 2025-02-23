@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { Draggable } from "react-beautiful-dnd";
 import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload } from 'antd';
-import { PlusOutlined, UploadOutlined, EditOutlined, EllipsisOutlined, HistoryOutlined, DeleteOutlined,CommentOutlined  } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, EditOutlined, EllipsisOutlined, HistoryOutlined, DeleteOutlined, CommentOutlined, FundViewOutlined } from '@ant-design/icons';
 import moment from "moment";
 import { CreateTask, DeleteTasks } from '../../api/TaskApi';
 import { useAuth } from "../../contexts/AuthContext";
@@ -16,7 +16,7 @@ const Container = styled("div")`
   background: ${props => (props.isDragging ? "lightgreen" : "white")};
 `;
 
-const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter,showCommentModal }) => {
+const Task = ({ task, index, showEditModal, showHistoryDrawer, setStarter, showCommentModal, showDetailModal }) => {
   const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin người dùng từ localStorage
   // Lấy thông tin người dùng từ localStorage
 
@@ -84,32 +84,41 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer,setStarter,showCom
                       )}
                     </Menu.Item>
                     <Menu.Item>
-                      <Button 
-                        type="link" 
-                        onClick={() => showCommentModal(task.id)} 
-                        icon={<CommentOutlined  style={{ color: 'violet' }} />}
+                      <Button
+                        type="link"
+                        onClick={() => showEditModal(task.id)}
+                        icon={userRole === role.RoleAdmin || userRole === role.RoleSubjectManager ?
+                          <EditOutlined  /> :
+                          <FundViewOutlined  />}
                       />
                     </Menu.Item>
                     <Menu.Item>
-                      <Button 
-                        type="link" 
-                        onClick={() => showHistoryDrawer(task.id)} 
+                      <Button
+                        type="link"
+                        onClick={() => showCommentModal(task.id)}
+                        icon={<CommentOutlined style={{ color: 'violet' }} />}
+                      />
+                    </Menu.Item>
+                    <Menu.Item>
+                      <Button
+                        type="link"
+                        onClick={() => showHistoryDrawer(task.id)}
                         icon={<HistoryOutlined style={{ color: 'green' }} />}
                       />
                     </Menu.Item>
-                    
+
                     <Menu.Item>
-                    {(userRole === role.RoleAdmin || userRole === role.RoleSubjectManager) && (
+                      {(userRole === role.RoleAdmin || userRole === role.RoleSubjectManager) && (
                         <Popconfirm
-                        title="Are you sure to delete this task?"
-                        onConfirm={() => handleDeleteTask(task.id)}
-                      >
-                        <Button type="link" danger icon={<DeleteOutlined />}></Button>
-                      </Popconfirm>
+                          title="Are you sure to delete this task?"
+                          onConfirm={() => handleDeleteTask(task.id)}
+                        >
+                          <Button type="link" danger icon={<DeleteOutlined />}></Button>
+                        </Popconfirm>
                       )}
-                     
+
                     </Menu.Item>
-                  
+
                   </Menu>
                 }
                 overlayStyle={{ zIndex: 9999 }}
