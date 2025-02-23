@@ -18,7 +18,7 @@ import { CreateComment, GetComment, GetAllComments } from "../../api/commentAPI"
 import { PlusOutlined, UploadOutlined, EditOutlined, SendOutlined, PaperClipOutlined, UserOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
 import { useAuth } from "../../contexts/AuthContext";
-
+import { role } from "../../utils";
 const { Option } = Mentions;
 const Container = styled("div")`
   display: flex;
@@ -55,6 +55,7 @@ const App = ({ filters, showHistoryDrawer }) => {
   const [comments, setComments] = useState([
   ]);
   const currentUser = useAuth()
+  const userRole=JSON.parse(localStorage.getItem('user'))?.role ; 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -507,6 +508,7 @@ const App = ({ filters, showHistoryDrawer }) => {
   const highlightMentions = (text) => {
     return text.replace(/@([\wÀ-ỹ\d]+)/g, '<span style="color: blue;">@$1</span>');
   };
+ 
   return isLoading ? (
     <div>Loading...</div>
   ) : (
@@ -537,6 +539,7 @@ const App = ({ filters, showHistoryDrawer }) => {
                     setStarter={setStarter}
                     showCommentModal={showCommentModal}
                     users={users}
+                    
                   />
                 );
               })}
@@ -545,16 +548,20 @@ const App = ({ filters, showHistoryDrawer }) => {
           )}
         </Droppable>
       </DragDropContext>
-      <Modal title="Edit New Task" open={IsEditModalVisible} onCancel={handleCancel} footer={null}>
+      <Modal title={userRole === role.RoleTeacher ? "Detail Task" : "Edit New Task"} open={IsEditModalVisible} onCancel={handleCancel} footer={null}>
         <Form form={form} layout="vertical">
           <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
-            <Input onBlur={(e) => handleFieldChange({ title: e.target.value })} />
+            <Input 
+              onBlur={(e) => handleFieldChange({ title: e.target.value })} 
+              disabled={userRole === role.RoleTeacher}
+            />
           </Form.Item>
           <Form.Item label="Description" name="description">
-            <Input.TextArea onBlur={(e) => handleFieldChange({ description: e.target.value })} />
+            <Input.TextArea disabled={userRole === role.RoleTeacher} onBlur={(e) => handleFieldChange({ description: e.target.value })} />
           </Form.Item>
           <Form.Item label="Assigners" name="assignee_ids">
             <Select
+            disabled={userRole === role.RoleTeacher}
               placeholder="Select assigners"
               mode="multiple"
               onChange={(value) => handleFieldChange({ assignee_ids: value })}
@@ -567,6 +574,7 @@ const App = ({ filters, showHistoryDrawer }) => {
           </Form.Item>
           <Form.Item label="Collaborators" name="collaborator_ids">
             <Select
+            disabled={userRole === role.RoleTeacher}
               placeholder="Select collaborators"
               mode="multiple"
               onChange={(value) => handleFieldChange({ collaborator_ids: value })}
@@ -578,17 +586,18 @@ const App = ({ filters, showHistoryDrawer }) => {
             </Select>
           </Form.Item>
           <Form.Item label="Deadline" name="deadline">
-            <DatePicker showTime onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
+            <DatePicker disabled={userRole === role.RoleTeacher} showTime onChange={(date) => handleFieldChange({ deadline: date ? date.format('YYYY-MM-DD HH:mm:ss') : null })} />
           </Form.Item>
           <Form.Item label="Priority" name="priority">
-            <Select placeholder="Select priority" onChange={(value) => handleFieldChange({ priority: value })}>
+            <Select disabled={userRole === role.RoleTeacher} placeholder="Select priority" onChange={(value) => handleFieldChange({ priority: value })}>
               <Select.Option value="high">High</Select.Option>
               <Select.Option value="medium">Medium</Select.Option>
               <Select.Option value="low">Low</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="attachment" label="Upload Attachment">
+          <Form.Item name="attachment" label="Upload Attachment" >
             <Upload
+            
               onChange={handleUploadChange}
               fileList={fileList?.map(file => ({
                 uid: file.id,
@@ -602,7 +611,7 @@ const App = ({ filters, showHistoryDrawer }) => {
               }))}
               beforeUpload={() => false}
             >
-              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+              <Button disabled={userRole === role.RoleTeacher}  icon={<UploadOutlined />}>Click to Upload</Button>
             </Upload>
           </Form.Item>
         </Form>
@@ -745,6 +754,7 @@ const App = ({ filters, showHistoryDrawer }) => {
 
 
       </Modal>
+      
     </>
 
   );
