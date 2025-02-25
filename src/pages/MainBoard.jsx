@@ -16,7 +16,7 @@ import { GetWorkspaceDetailAPI } from '../api/workspaceApi';
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isHistoryDrawerVisible, setIsHistoryDrawerVisible] = useState(false);
-  const { workspaceId } = useParams();
+  const { workspaceId,taskID } = useParams();
   const [workspace, setWorkspace] = useState(null);
   //const { selectedWorkspace,selectedWorkspaceName } = useWorkspace();
   const [trackingHistory, setTrackingHistory] = useState([]);
@@ -182,7 +182,7 @@ const columns = [
       </Row>
 
 
-      <KanbanBoard filters={filters} showHistoryDrawer={showHistoryDrawer}/>
+      <KanbanBoard filters={filters} showHistoryDrawer={showHistoryDrawer} taskID={taskID}/>
       <Drawer
         title="Filter Options"
         placement="right"

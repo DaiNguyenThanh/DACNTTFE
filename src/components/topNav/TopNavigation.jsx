@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import './TopNavigation.css';
 import logo from '../../assets/imgaes/logoITTDTU.png';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { path } from '../../utils';
 import { GetUnreadCount, GetAllNotifications, ReadNotification } from '../../api/notificationAPI';
 import { CreateFile } from '../../api/fileAPI';
@@ -48,6 +48,8 @@ const TopNavigation = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userName, setUserName] = useState(user?.name || '');
   const [changePasswordForm]=useForm()
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
@@ -173,7 +175,14 @@ const TopNavigation = () => {
         </Menu.Item>
       ) : (
         allNotifications.map(notification => (
-          <Menu.Item key={notification.id}>
+          <Menu.Item key={notification.id} onClick={() => {
+            if (notification.data.source === 'request') {
+              navigate(`/request/${notification?.data?.id}`);
+            } else if (notification.data.source === 'task') {
+              navigate(`/workspace/${notification?.data?.workspace_Id}/task/${notification?.data?.id}`);
+            }
+           
+          }}>
             <div className="notification-item">
               <strong>{notification.heading}</strong>
               <p>{notification.content}</p>

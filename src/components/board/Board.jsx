@@ -29,7 +29,7 @@ const Container = styled("div")`
   min-width:300px
 `;
 
-const App = ({ filters, showHistoryDrawer }) => {
+const App = ({ filters, showHistoryDrawer, taskID }) => {
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth()
@@ -70,6 +70,35 @@ const App = ({ filters, showHistoryDrawer }) => {
 
     fetchUsers();
   }, []);
+  useEffect(()=>{
+    const  fetchTask=async ()=>{
+      const response = await GetTask(taskID); // Thay đổi ở đây
+      setSelectedTask(response.data);
+      setIsEditModalVisible(true);
+      if (response.data?.files?.length > 0) {
+        setFileList(response.data.files)
+      }
+      else {
+        setFileList([])
+      }
+      console.log(fileList);
+      // Reset các trường trong form
+      form.resetFields();
+  
+      // Thiết lập giá trị mặc định cho form
+      form.setFieldsValue({
+        title: response.data.title,
+        description: response.data.description || '', // Nếu có trường mô tả
+        assignee_ids: response.data.assignee_ids || [], // Nếu có trường assignee_ids
+        collaborator_ids: response.data.collaborator_ids || [], // Nếu có trường collaborator_ids
+        deadline: moment(response.data.deadline), // Chuyển đổi deadline sang định dạng moment
+        priority: response.data.priority,
+        attachment: response.data.files
+      });
+    }
+    if(taskID)
+      fetchTask()
+  },[taskID])
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
       if (!workspaceId) return;
@@ -307,6 +336,7 @@ const App = ({ filters, showHistoryDrawer }) => {
   };
   const handleCancel = () => {
     setIsEditModalVisible(false);
+    window.history.pushState({}, "", `/workspace/`+workspaceId);
   };
   const handleFieldChange = async (changedFields) => {
     const updatedData = {
@@ -341,6 +371,7 @@ const App = ({ filters, showHistoryDrawer }) => {
     // Gọi API để lấy task dựa trên id
     const response = await GetTask(taskId); // Thay đổi ở đây
     setSelectedTask(response.data);
+    window.history.pushState({}, "", `/workspace/`+workspaceId+"/task/"+taskId);
     setIsEditModalVisible(true);
     if (response.data?.files?.length > 0) {
       setFileList(response.data.files)
@@ -565,10 +596,10 @@ const App = ({ filters, showHistoryDrawer }) => {
               placeholder="Select assigners"
               mode="multiple"
               onChange={(value) => handleFieldChange({ assignee_ids: value })}
-              value={selectedTask?.assignee_ids || []}
+              value={selectedTask?.assignees || []}
             >
               {users?.length > 0 ? users?.map(user => (
-                <Select.Option key={user?.id} value={user?.id}>{user?.name}</Select.Option>
+                <Select.Option key={user?.id} value={user?.id}>{user.name}</Select.Option>
               )) : <Select.Option disabled>No users available</Select.Option>}
             </Select>
           </Form.Item>
@@ -578,7 +609,7 @@ const App = ({ filters, showHistoryDrawer }) => {
               placeholder="Select collaborators"
               mode="multiple"
               onChange={(value) => handleFieldChange({ collaborator_ids: value })}
-              value={selectedTask?.collaborator_ids || []}
+              value={selectedTask?.collaborators || []}
             >
               {users?.length > 0 ? users?.map(user => (
                 <Select.Option key={user?.id} value={user?.id}>{user?.name}</Select.Option>

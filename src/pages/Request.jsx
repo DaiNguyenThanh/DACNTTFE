@@ -10,7 +10,7 @@ import { GetWorkSpaceMe, GetWorkspaceDetailAPI } from '../api/workspaceApi';
 import { GetAllTasks } from '../api/TaskApi';
 import { GetAllRequest, GetRequest, ConfirmRequest, DeleteRequest } from '../api/requestAPI';
 import { CreateComment ,GetAllComments} from '../api/commentAPI';
-import { useForm } from "antd/es/form/Form";
+import { useForm } from "antd/es/form/Form";import { useParams,useNavigate } from 'react-router-dom'; 
 import {
     BarChartOutlined,
     PieChartOutlined,
@@ -32,6 +32,8 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const RequestPage = () => {
+    const { id } = useParams(); 
+   const {navigate}=useNavigate()
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [activeTab, setActiveTab] = useState('all');
     const [searchText, setSearchText] = useState('');
@@ -62,6 +64,16 @@ const RequestPage = () => {
     const [commentTextToSend, setCommentTextToSend] = useState("");
     const [taskId, setTaskId] = useState(null)
     const [comments, setComments] = useState([])
+    useEffect(() => {
+       const fetchRequest=async(id)=>{
+        if(id){
+            const detail = await GetRequest(id);
+            setRequestDetail(detail.data);
+        }
+       }
+       if(id)
+       fetchRequest(id)
+    }, [id]); // Thêm id vào dependency array
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
@@ -137,18 +149,19 @@ const RequestPage = () => {
     const handleRowClick = async (record) => {
         try {
             const detail = await GetRequest(record.id);
-            const usersReponse=await getListUserAPI(detail.data.workspace.id)
+            const usersReponse = await getListUserAPI(detail.data.workspace.id);
             setUsers(usersReponse.data);
             setRequestDetail(detail.data);
             setSelectedRequest(record);
             setFileListComment([]);
             setFilePreviews(null);
             setFileNames([]);
-            setCommentText("")
+            setCommentText("");
             const response = await GetAllComments(record.id, "request"); // Assume you have an API to get comments
             setComments(response.data);
-
-
+            window.history.pushState({}, "", `/request/${record.id}`);
+            // Thêm ID của request vào route
+            
         } catch (error) {
             console.error('Error fetching request detail:', error.message);
         }

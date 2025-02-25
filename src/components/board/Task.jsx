@@ -78,11 +78,11 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer, setStarter, showC
               <Dropdown
                 overlay={
                   <Menu>
-                    <Menu.Item>
+                    {/* <Menu.Item>
                       {(userRole === role.RoleAdmin || userRole === role.RoleSubjectManager) && (
                         <Button type="link" onClick={() => showEditModal(task.id)} icon={<EditOutlined />} />
                       )}
-                    </Menu.Item>
+                    </Menu.Item> */}
                     <Menu.Item>
                       <Button
                         type="link"
