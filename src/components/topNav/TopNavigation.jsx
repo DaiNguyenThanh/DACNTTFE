@@ -179,7 +179,7 @@ const TopNavigation = () => {
             if (notification.data.source === 'request') {
               navigate(`/request/${notification?.data?.id}`);
             } else if (notification.data.source === 'task') {
-              navigate(`/workspace/${notification?.data?.workspaceId}/task/${notification?.data?.id}`);
+              navigate(`/workspace/${notification?.data?.workspace_Id}/task/${notification?.data?.id}`);
             }
            
           }}>
