@@ -185,7 +185,7 @@ const TopNavigation = () => {
            
           }}>
             <div className="notification-item">
-              <strong>{notification.heading}</strong>
+              {/* <strong>{notification.heading}</strong> */}
               <p>{notification.content}</p>
               {notification.read ? null : <Badge status="processing" style={{ marginLeft: 8 }} />}
             </div>
