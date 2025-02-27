@@ -9,8 +9,8 @@ import { useWorkspace } from '../contexts/WorkspaceProvider';
 import { GetWorkSpaceMe, GetWorkspaceDetailAPI } from '../api/workspaceApi';
 import { GetAllTasks } from '../api/TaskApi';
 import { GetAllRequest, GetRequest, ConfirmRequest, DeleteRequest } from '../api/requestAPI';
-import { CreateComment ,GetAllComments} from '../api/commentAPI';
-import { useForm } from "antd/es/form/Form";import { useParams,useNavigate } from 'react-router-dom'; 
+import { CreateComment, GetAllComments } from '../api/commentAPI';
+import { useForm } from "antd/es/form/Form"; import { useParams, useNavigate } from 'react-router-dom';
 import {
     BarChartOutlined,
     PieChartOutlined,
@@ -21,19 +21,20 @@ import {
     UserOutlined,
     PaperClipOutlined,
     SendOutlined,
-    EyeOutlined 
+    EyeOutlined
 } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 import { useAuth } from '../contexts/AuthContext';
 import { getListUserAPI } from '../api/authApi';
+import { path } from '../utils';
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const RequestPage = () => {
-    const { id } = useParams(); 
-   const {navigate}=useNavigate()
+    const { id } = useParams();
+    const { navigate } = useNavigate()
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [activeTab, setActiveTab] = useState('all');
     const [searchText, setSearchText] = useState('');
@@ -41,7 +42,7 @@ const RequestPage = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [workspaces, setWorkspaces] = useState([]);
     const [stages, setStages] = useState([]);
-    const [commentForm]=useForm()
+    const [commentForm] = useForm()
     const [tasks, setTasks] = useState([]);
     const [selectedWorkspace, setSelectedWorkspace] = useState(null);
     const [selectedStage, setSelectedStage] = useState(null);
@@ -51,7 +52,7 @@ const RequestPage = () => {
     const [showDate, setShowDate] = useState(false);
     const [fileList, setFileList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [fileListComment,setFileListComment]=useState([])
+    const [fileListComment, setFileListComment] = useState([])
     let isRemovingFile = false; // Biến cờ để theo dõi việc xóa file
     const { user } = useAuth()
     const [users, setUsers] = useState([])
@@ -65,14 +66,20 @@ const RequestPage = () => {
     const [taskId, setTaskId] = useState(null)
     const [comments, setComments] = useState([])
     useEffect(() => {
-       const fetchRequest=async(id)=>{
-        if(id){
-            const detail = await GetRequest(id);
-            setRequestDetail(detail.data);
+        const fetchRequest = async (id) => {
+            if (id) {
+                try{
+                    const detail = await GetRequest(id);
+                    setRequestDetail(detail.data);
+                }
+                catch(e){
+                    navigate(path.HOME)
+                }
+               
+            }
         }
-       }
-       if(id)
-       fetchRequest(id)
+        if (id)
+            fetchRequest(id)
     }, [id]); // Thêm id vào dependency array
     useEffect(() => {
         const fetchWorkspaces = async () => {
@@ -150,7 +157,8 @@ const RequestPage = () => {
         try {
             const detail = await GetRequest(record.id);
             const usersReponse = await getListUserAPI(detail.data.workspace.id);
-            setUsers(usersReponse.data);
+            setUsers(usersReponse.data.data);
+            console.log(users)
             setRequestDetail(detail.data);
             setSelectedRequest(record);
             setFileListComment([]);
@@ -161,7 +169,7 @@ const RequestPage = () => {
             setComments(response.data);
             window.history.pushState({}, "", `/request/${record.id}`);
             // Thêm ID của request vào route
-            
+
         } catch (error) {
             console.error('Error fetching request detail:', error.message);
         }
@@ -202,14 +210,14 @@ const RequestPage = () => {
             title: 'Action',
             dataIndex: 'detail',
             render: (text, record) => (
-                <Button 
-                  //type="primary" 
-                  icon={<EyeOutlined />} 
-                  onClick={() => handleRowClick(record)}
+                <Button
+                    //type="primary" 
+                    icon={<EyeOutlined />}
+                    onClick={() => handleRowClick(record)}
                 >
-                  Detail
+                    Detail
                 </Button>
-              ),
+            ),
         },
     ];
 
@@ -294,7 +302,8 @@ const RequestPage = () => {
             const reason = " "
             const status = "rejected"
             const response = await ConfirmRequest(requestId, { reason, status })
-
+            const detail = await GetRequest(requestId)
+            setRequestDetail(detail.data)
             if (response.message == "Success") {
                 fetchRequests()
                 message.success(`Request Rejected.`)
@@ -441,10 +450,10 @@ const RequestPage = () => {
                             <p><strong>Created At:</strong> {moment(requestDetail.created_at).format('DD/MM/YYYY HH:mm')}</p>
                             {/* Thêm các trường khác nếu cần */}
                             <Row style={{ marginTop: '16px', marginBottom: 16 }}>
-                                {requestDetail.can_confirm && (
+                                {requestDetail.status !== 'rejected' && requestDetail.status !== 'approved' && requestDetail.can_confirm && (
                                     <Button type='primary' onClick={() => handleApprove(requestDetail.id)} style={{ marginRight: '8px' }}>Approval</Button>
                                 )}
-                                {requestDetail.can_reject && (
+                                {requestDetail.status !== 'rejected' && requestDetail.status !== 'approved' && requestDetail.can_reject && (
                                     <Button danger type='primary' onClick={() => handleReject(requestDetail.id)} style={{ marginRight: '8px' }}>Reject</Button>
                                 )}
                                 {requestDetail.can_delete && (
@@ -579,7 +588,7 @@ const RequestPage = () => {
                                                 )}
                                             </div>
                                             <small style={{ whiteSpace: "nowrap", color: "#888" }}>
-                                            {moment.utc(comment.created_at, "YYYY-MM-DD HH:mm:ss").fromNow()}
+                                                {moment.utc(comment.created_at, "YYYY-MM-DD HH:mm:ss").fromNow()}
 
 
                                             </small>

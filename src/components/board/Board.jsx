@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams ,useNavigate} from 'react-router-dom';
 import { Badge, Col, Row, Typography, Dropdown, Menu, Button, Popconfirm, Form, Modal, Input, Select, DatePicker, Upload, Avatar, Mentions } from 'antd';
 import styled from "@emotion/styled";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
@@ -18,7 +18,7 @@ import { CreateComment, GetComment, GetAllComments } from "../../api/commentAPI"
 import { PlusOutlined, UploadOutlined, EditOutlined, SendOutlined, PaperClipOutlined, UserOutlined } from '@ant-design/icons';
 import useUsers from '../../contexts/UserContext';
 import { useAuth } from "../../contexts/AuthContext";
-import { role } from "../../utils";
+import { path, role } from "../../utils";
 const { Option } = Mentions;
 const Container = styled("div")`
   display: flex;
@@ -30,12 +30,13 @@ const Container = styled("div")`
 `;
 
 const App = ({ filters, showHistoryDrawer, taskID }) => {
+  const {navigate}=useNavigate()
   const [starter, setStarter] = useState({ tasks: {}, columns: {}, columnOrder: [] });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth()
-  const [addTaskForm ] = useForm();
-  const [commentForm]=useForm()
-  const { noMember, assignedToMe, noDates, overdue, dueNextDay, dueNextWeek,dueNextMonth,low, medium, high,markComplete ,markNotComplete} = filters;
+  const [addTaskForm] = useForm();
+  const [commentForm] = useForm()
+  const { noMember, assignedToMe, noDates, overdue, dueNextDay, dueNextWeek, dueNextMonth, low, medium, high, markComplete, markNotComplete } = filters;
   const { workspaceId } = useParams();
   const [IsEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
@@ -55,7 +56,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
   const [comments, setComments] = useState([
   ]);
   const currentUser = useAuth()
-  const userRole=JSON.parse(localStorage.getItem('user'))?.role ; 
+  const userRole = JSON.parse(localStorage.getItem('user'))?.role;
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -70,35 +71,44 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
 
     fetchUsers();
   }, []);
-  useEffect(()=>{
-    const  fetchTask=async ()=>{
-      const response = await GetTask(taskID); // Thay đổi ở đây
-      setSelectedTask(response.data);
-      setIsEditModalVisible(true);
-      if (response.data?.files?.length > 0) {
-        setFileList(response.data.files)
+  useEffect(() => {
+    const fetchTask = async () => {
+      try {
+
+
+        const response = await GetTask(taskID); // Thay đổi ở đây
+        setSelectedTask(response.data);
+        setIsEditModalVisible(true);
+        if (response.data?.files?.length > 0) {
+          setFileList(response.data.files)
+        }
+        else {
+          setFileList([])
+        }
+        console.log(fileList);
+        // Reset các trường trong form
+        form.resetFields();
+
+        // Thiết lập giá trị mặc định cho form
+        form.setFieldsValue({
+          title: response.data.title,
+          description: response.data.description || '', // Nếu có trường mô tả
+          assignee_ids: response.data.assignee_ids || [], // Nếu có trường assignee_ids
+          collaborator_ids: response.data.collaborator_ids || [], // Nếu có trường collaborator_ids
+          deadline: moment(response.data.deadline), // Chuyển đổi deadline sang định dạng moment
+          priority: response.data.priority,
+          attachment: response.data.files
+        });
       }
-      else {
-        setFileList([])
+      catch (e) {
+        navigate(path.HOME
+
+        )
       }
-      console.log(fileList);
-      // Reset các trường trong form
-      form.resetFields();
-  
-      // Thiết lập giá trị mặc định cho form
-      form.setFieldsValue({
-        title: response.data.title,
-        description: response.data.description || '', // Nếu có trường mô tả
-        assignee_ids: response.data.assignee_ids || [], // Nếu có trường assignee_ids
-        collaborator_ids: response.data.collaborator_ids || [], // Nếu có trường collaborator_ids
-        deadline: moment(response.data.deadline), // Chuyển đổi deadline sang định dạng moment
-        priority: response.data.priority,
-        attachment: response.data.files
-      });
     }
-    if(taskID)
+    if (taskID)
       fetchTask()
-  },[taskID])
+  }, [taskID])
   useEffect(() => {
     const fetchWorkspaceDetails = async () => {
       if (!workspaceId) return;
@@ -114,37 +124,37 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         const status = false;
         const assignee_ids = [];
         const collaborator_ids = [];
-        if(noMember){
-          assignee_ids=undefined
+        if (noMember) {
+          assignee_ids = undefined
         }
-        if(assignedToMe){
+        if (assignedToMe) {
           assignee_ids.push(user?.id)
         }
-        
+
         if (noDates) {
           deadline_from = undefined;
           deadline_to = undefined;
-        } 
+        }
         if (overdue) {
           deadline_from = undefined;
           deadline_to = moment().subtract(1, 'days'); // Lùi lại 1 ngày
         }
-        
+
         if (dueNextDay) {
           deadline_from = moment();
           deadline_to = moment().add(1, 'days'); // Cộng thêm 1 ngày
         }
-        
+
         if (dueNextWeek) {
           deadline_from = moment();
           deadline_to = moment().add(1, 'weeks'); // Cộng thêm 7 ngày
         }
-        
+
         if (dueNextMonth) {
           deadline_from = moment();
           deadline_to = moment().add(1, 'months'); // Cộng thêm 30 ngày
         }
-        
+
         // Format lại ngày nếu cần
         if (deadline_from) {
           deadline_from = deadline_from.format("DD/MM/YYYY");
@@ -161,11 +171,11 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         if (high) {
           priotiry = "high"
         }
-        if(markComplete){
-          status=true
+        if (markComplete) {
+          status = true
         }
-        if(markNotComplete){
-          status=false
+        if (markNotComplete) {
+          status = false
         }
         // Thêm logic để query API với deadline
         const allTasks = await Promise.all(
@@ -205,7 +215,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
     };
 
     fetchWorkspaceDetails();
-  }, [workspaceId, noDates, dueNextDay, low, medium, high,markComplete,dueNextWeek,dueNextMonth,markNotComplete,noMember,assignedToMe,overdue]);
+  }, [workspaceId, noDates, dueNextDay, low, medium, high, markComplete, dueNextWeek, dueNextMonth, markNotComplete, noMember, assignedToMe, overdue]);
 
   useEffect(() => {
     console.log("Danh sách người dùng đã thay đổi:", users);
@@ -336,7 +346,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
   };
   const handleCancel = () => {
     setIsEditModalVisible(false);
-    window.history.pushState({}, "", `/workspace/`+workspaceId);
+    window.history.pushState({}, "", `/workspace/` + workspaceId);
   };
   const handleFieldChange = async (changedFields) => {
     const updatedData = {
@@ -371,7 +381,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
     // Gọi API để lấy task dựa trên id
     const response = await GetTask(taskId); // Thay đổi ở đây
     setSelectedTask(response.data);
-    window.history.pushState({}, "", `/workspace/`+workspaceId+"/task/"+taskId);
+    window.history.pushState({}, "", `/workspace/` + workspaceId + "/task/" + taskId);
     setIsEditModalVisible(true);
     if (response.data?.files?.length > 0) {
       setFileList(response.data.files)
@@ -459,11 +469,11 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
 
   const handleCommentSubmit = async (values) => {
     setCommentText("");
-     commentForm.resetFields()
+    commentForm.resetFields()
     try {
-   
+
       const uploadedFiles = [];
-     
+
 
       for (const file of fileList) {
         const response = await CreateFile({ file: file, from: "comment" }); // Chờ từng file upload xong
@@ -533,13 +543,13 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         newText = newText.replace(regex, `<${user.id}>`); // Thay thế bằng @<ID>
       });
     }
-    
+
     return newText;
   };
   const highlightMentions = (text) => {
     return text.replace(/@([\wÀ-ỹ\d]+)/g, '<span style="color: blue;">@$1</span>');
   };
- 
+
   return isLoading ? (
     <div>Loading...</div>
   ) : (
@@ -570,7 +580,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
                     setStarter={setStarter}
                     showCommentModal={showCommentModal}
                     users={users}
-                    
+
                   />
                 );
               })}
@@ -582,8 +592,8 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
       <Modal title={userRole === role.RoleTeacher ? "Detail Task" : "Edit New Task"} open={IsEditModalVisible} onCancel={handleCancel} footer={null}>
         <Form form={form} layout="vertical">
           <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please input the task title!' }]}>
-            <Input 
-              onBlur={(e) => handleFieldChange({ title: e.target.value })} 
+            <Input
+              onBlur={(e) => handleFieldChange({ title: e.target.value })}
               disabled={userRole === role.RoleTeacher}
             />
           </Form.Item>
@@ -592,7 +602,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
           </Form.Item>
           <Form.Item label="Assigners" name="assignee_ids">
             <Select
-            disabled={userRole === role.RoleTeacher}
+              disabled={userRole === role.RoleTeacher}
               placeholder="Select assigners"
               mode="multiple"
               onChange={(value) => handleFieldChange({ assignee_ids: value })}
@@ -605,7 +615,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
           </Form.Item>
           <Form.Item label="Collaborators" name="collaborator_ids">
             <Select
-            disabled={userRole === role.RoleTeacher}
+              disabled={userRole === role.RoleTeacher}
               placeholder="Select collaborators"
               mode="multiple"
               onChange={(value) => handleFieldChange({ collaborator_ids: value })}
@@ -628,7 +638,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
           </Form.Item>
           <Form.Item name="attachment" label="Upload Attachment" >
             <Upload
-            
+
               onChange={handleUploadChange}
               fileList={fileList?.map(file => ({
                 uid: file.id,
@@ -642,7 +652,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
               }))}
               beforeUpload={() => false}
             >
-              <Button disabled={userRole === role.RoleTeacher}  icon={<UploadOutlined />}>Click to Upload</Button>
+              <Button disabled={userRole === role.RoleTeacher} icon={<UploadOutlined />}>Click to Upload</Button>
             </Upload>
           </Form.Item>
         </Form>
@@ -750,7 +760,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
 
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: 0 }}>
-                    <Avatar src={comment?.user?.avatar} size="small" icon={!comment?.user?.avatar && <UserOutlined />}  /> <strong>{comment?.user?.name}:</strong> {comment?.content}
+                    <Avatar src={comment?.user?.avatar} size="small" icon={!comment?.user?.avatar && <UserOutlined />} /> <strong>{comment?.user?.name}:</strong> {comment?.content}
                   </p>
                   {comment.files && comment.files.length > 0 && (
                     <div style={{ marginTop: "5px", margin: 8 }}>
@@ -774,7 +784,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
                   )}
                 </div>
                 <small style={{ whiteSpace: "nowrap", color: "#888" }}>
-                {moment.utc(comment.created_at, "YYYY-MM-DD HH:mm:ss").fromNow()}
+                  {moment.utc(comment.created_at, "YYYY-MM-DD HH:mm:ss").fromNow()}
                 </small>
               </div>
             ))
@@ -785,7 +795,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
 
 
       </Modal>
-      
+
     </>
 
   );
