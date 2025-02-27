@@ -67,7 +67,8 @@ const TopNavigation = () => {
     try {
       const response = await GetAllNotifications();
       // Lọc chỉ lấy các thông báo đã đọc
-      const readNotifications = response.data.filter(notification => notification.read === false);
+      const readNotifications = response.data
+      //.filter(notification => notification.read === false);
       setAllNotifications(readNotifications);
       if (response.message === "Success") {
         setUnreadCount(null);
@@ -164,7 +165,7 @@ const TopNavigation = () => {
 
   // Menu cho Notifications
   const notificationMenu = (
-    <Menu style={{ width: 300 }}>
+    <Menu style={{ width: 300 ,height:500 }}>
       <Menu.Item key="title" disabled>
         <div style={{ fontWeight: 'bold' }}>Notification</div>
       </Menu.Item>
@@ -179,7 +180,7 @@ const TopNavigation = () => {
             if (notification.data.source === 'request') {
               navigate(`/request/${notification?.data?.id}`);
             } else if (notification.data.source === 'task') {
-              navigate(`/workspace/${notification?.data?.workspace_Id}/task/${notification?.data?.id}`);
+              navigate(`/workspace/${notification?.data?.workspace_id}/task/${notification?.data?.id}`);
             }
            
           }}>
