@@ -83,7 +83,7 @@ const Column = ({ tasks, column, index, starter, updateColumns, showEditModal, s
         priority: values.priority,
         title: values.title,
         stage_id: column.id,
-        status: true,
+        status: false,
         workspace_id: workspaceId,
         file_ids: attachmentIds.length > 0 ? attachmentIds : undefined
       });

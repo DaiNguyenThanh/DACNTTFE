@@ -44,6 +44,7 @@ const RequestPage = () => {
     const [stages, setStages] = useState([]);
     const [commentForm] = useForm()
     const [tasks, setTasks] = useState([]);
+    const [selectedTask, setSelectedTask] = useState()
     const [selectedWorkspace, setSelectedWorkspace] = useState(null);
     const [selectedStage, setSelectedStage] = useState(null);
     const [form] = Form.useForm();
@@ -68,14 +69,14 @@ const RequestPage = () => {
     useEffect(() => {
         const fetchRequest = async (id) => {
             if (id) {
-                try{
+                try {
                     const detail = await GetRequest(id);
                     setRequestDetail(detail.data);
                 }
-                catch(e){
+                catch (e) {
                     navigate(path.HOME)
                 }
-               
+
             }
         }
         if (id)
@@ -114,6 +115,7 @@ const RequestPage = () => {
 
     const handleWorkspaceChange = async (value) => {
         setSelectedWorkspace(value);
+        form.resetFields(["task_id", "stage_id"])
         setSelectedStage(null);
         try {
             const response = await GetWorkspaceDetailAPI(value);
@@ -126,13 +128,17 @@ const RequestPage = () => {
 
     const handleStageChange = async (value) => {
         setSelectedStage(value);
+        form.resetFields(["task_id"]);
+
         try {
             const tasksData = await GetAllTasks(value);
-            setTasks(tasksData.data || []);
+            const filteredTasks = (tasksData.data || []).filter(task => !task.status); // Lọc task có status = false
+            setTasks(filteredTasks);
         } catch (error) {
             console.error('Error fetching tasks:', error.message);
         }
     };
+
 
     const filteredDataSource = requests.map(item => ({
         id: item.id,
@@ -237,6 +243,19 @@ const RequestPage = () => {
     const handleSubmit = async (values) => {
         try {
             let attachmentId = null;
+            /*
+            const currentDate = moment(); // Current date
+            const currentDeadline = moment(requestDetail.deadline); // Current deadline
+
+            // Validate new deadline
+            if (values.type === 'change-deadline' && values.date) {
+                const newDeadline = moment(values.date);
+                if (newDeadline.isBefore(currentDate) || newDeadline.isAfter(currentDeadline)) {
+                    message.error("The extended deadline must be greater than the current date and less than the current deadline.");
+                    return; // Stop execution if invalid
+                }
+            }
+            */
             console.log(values.attachment)
             // Kiểm tra xem file có tồn tại hay không
             const attachmentIds = []; // Mảng để lưu trữ các ID file đã tạo
@@ -250,12 +269,12 @@ const RequestPage = () => {
                 }
                 attachmentId = attachmentIds; // Gán mảng ID file cho attachmentId
             }
-
-            const formattedDate = moment(values.date).format('YYYY-MM-DD HH:mm:ss');
-
+            console.log(values.date)
+            const formattedDate =values.date.format('YYYY-MM-DD HH:mm:ss') ;
+            console.log(formattedDate)
             const requestResponse = await CreateRequest({
                 attachment_ids: attachmentIds.length > 0 ? attachmentIds : undefined, // Chỉ thêm attachmentId nếu có
-                //deadline: formattedDate,
+                deadline: formattedDate,
                 reason: values.note,
                 task_id: values.task_id,
                 type: values.type,
@@ -445,9 +464,22 @@ const RequestPage = () => {
                         <Card title="Request Details">
                             <p><strong>Type:</strong> {requestDetail.type === "change-deadline" ? "Change Deadline" : requestDetail.type === "make-done" ? "Make Done" : requestDetail.type}</p>
                             <p><strong>Reason:</strong> {requestDetail.reason}</p>
+                            {requestDetail.type === "change-deadline" && (
+  <p><strong>New Deadline:</strong> {requestDetail.Deadline}</p>
+)}
+
                             <p><strong>Created by:</strong> {requestDetail.user.name}</p>
                             <p><strong>Status:</strong> {<Badge count={requestDetail.status} style={{ backgroundColor: requestDetail.status === 'rejected' ? '#f5222d' : requestDetail.status === 'pending' ? '#faad14' : '#52c41a' }} />}</p>
                             <p><strong>Created At:</strong> {moment(requestDetail.created_at).format('DD/MM/YYYY HH:mm')}</p>
+                            <p><strong>Attachments:</strong></p> <Upload showUploadList={true}  fileList={requestDetail?.files?.map(file => ({
+                uid: file.id,
+                name: file.id,
+                status: 'done',
+                url: file.url,
+               
+              }))} beforeUpload={() => false} >
+                                        
+                            </Upload>
                             {/* Thêm các trường khác nếu cần */}
                             <Row style={{ marginTop: '16px', marginBottom: 16 }}>
                                 {requestDetail.status !== 'rejected' && requestDetail.status !== 'approved' && requestDetail.can_confirm && (
@@ -628,24 +660,53 @@ const RequestPage = () => {
                         </Select>
                     </Form.Item>
                     <Form.Item label="Stage" name="stage_id" rules={[{ required: true, message: 'Please select a stage!' }]}>
-                        <Select placeholder="Select a stage" onChange={handleStageChange} showSearch disabled={!selectedWorkspace}>
+                        <Select placeholder="Select a stage" onChange={handleStageChange} showSearch >
                             {stages.map(stage => (
                                 <Option key={stage.id} value={stage.id}>{stage.name}</Option>
                             ))}
                         </Select>
                     </Form.Item>
-
-                    <Form.Item label="Task" name="task_id" rules={[{ required: true, message: 'Please select a task!' }]}>
-                        <Select placeholder="Select a task" showSearch disabled={!selectedStage}>
+                    <Form.Item
+                        label="Task"
+                        name="task_id"
+                        rules={[{ required: true, message: 'Please select a task!' }]}
+                    >
+                        <Select
+                            placeholder="Select a task"
+                            onChange={(value) => {
+                                const selected = tasks.find(task => task.id === value); // Tìm task theo ID
+                                setSelectedTask(selected);
+                                console.log(selected); // In ra toàn bộ task
+                            }}
+                            showSearch
+                        >
                             {tasks.map(task => (
                                 <Option key={task.id} value={task.id}>{task.title}</Option>
                             ))}
                         </Select>
                     </Form.Item>
+
                     {showDate && (
-                        <Form.Item label="Date and Time" name="date" rules={[{ required: true, message: 'Please select the date and time!' }]}>
-                            <DatePicker showTime style={{ width: '100%' }} />
+                        <Form.Item
+                            label="New Deadline"
+                            name="date"
+                            rules={[{ required: true, message: 'Please select the date and time!' }]}
+                        >
+                            <DatePicker
+                                showTime
+                                style={{ width: '100%' }}
+                                disabledDate={(current) => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0); // Reset giờ phút giây để chỉ so sánh ngày
+                                    const deadline = selectedTask?.deadline ? new Date(selectedTask.deadline) : null;
+
+                                    return current && (
+                                        current < today || (deadline && current < deadline)
+                                    );
+                                }}
+                            />
                         </Form.Item>
+
                     )}
                     <Form.Item label="Reason" name="note" rules={[{ required: true, message: 'Please input the reason!' }]}>
                         <Input.TextArea editorStyle={{ border: '1px solid #ddd', minHeight: '200px' }} />
