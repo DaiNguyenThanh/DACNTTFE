@@ -52,14 +52,21 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer, setStarter, showC
           <Row justify="space-between">
             <Col >
               <div>{task.title}</div>
-
+          
             </Col>
             <Col>
               <Badge
                 count={task.priority}
                 style={{ backgroundColor: task.priority === 'high' ? '#f5222d' : task.priority === 'medium' ? '#faad14' : '#52c41a' }}
               />
-
+             <Col>
+              <Badge
+                count={task.status === true ? 'complete' : 'incomplete'}
+                style={{ backgroundColor: task.status === true ? '#52c41a': '#f5222d'  }}
+              />
+              </Col>
+              
+              
               {/* <Button type="link" onClick={()=>showHistoryDrawer(task.id)} icon={<EllipsisOutlined/>} />
           
 
@@ -70,10 +77,10 @@ const Task = ({ task, index, showEditModal, showHistoryDrawer, setStarter, showC
           </Row>
           <Row justify="space-between">
             <Col >
-
+            {task.status}
               <Text type="secondary">{task.deadline}</Text>
             </Col>
-
+             
             <Col >
               <Dropdown
                 overlay={

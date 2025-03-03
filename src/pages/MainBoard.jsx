@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useCallback} from 'react';
 import { Button, Drawer, Input, Checkbox, Row, Col, Badge, Switch, Menu, Dropdown, Table, Avatar } from 'antd';
 import {
   StarOutlined,
@@ -10,8 +10,9 @@ import {
 import KanbanBoard from '../components/board/Board';
 import { useWorkspace } from "../contexts/WorkspaceProvider";
 import { GetAllTaskHistorys, GetTaskHistory } from '../api/taskHistoryApi';
-import { useParams } from 'react-router-dom';
+import { useParams  } from 'react-router-dom';
 import { GetWorkspaceDetailAPI } from '../api/workspaceApi';
+import { debounce } from "lodash";
 
 const MainBoard = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -33,9 +34,16 @@ const MainBoard = () => {
     high: false,
     status: false,
     dueNextWeek:false,
-    dueNextMonth:false
+    dueNextMonth:false,
+    keyword:""
   });
   
+const handleSearch = useCallback(
+  debounce((value) => {
+    setFilters({ keyword: value });
+  }, 300), // Đợi 300ms sau khi người dùng ngừng nhập
+  []
+);
   const showDrawer = () => {
     setIsDrawerVisible(true);
   };
@@ -158,7 +166,8 @@ const columns = [
       high: false,
       status: false,
       dueNextWeek:false,
-      dueNextMonth:false
+      dueNextMonth:false,
+      keyword:""
     })
   }
   return (
@@ -191,7 +200,11 @@ const columns = [
       >
         <div style={{ marginBottom: '20px' }}>
           <h4>Keywords</h4>
-          <Input placeholder="Search keyword" />
+          <Input 
+  onChange={(e) => handleSearch(e.target.value)} 
+  placeholder="Search keyword" 
+/>
+
         </div>
         <div style={{ marginBottom: '20px' }}>
           <h4>Members</h4>

@@ -36,13 +36,14 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
   const { user } = useAuth()
   const [addTaskForm] = useForm();
   const [commentForm] = useForm()
-  const { noMember, assignedToMe, noDates, overdue, dueNextDay, dueNextWeek, dueNextMonth, low, medium, high, markComplete, markNotComplete } = filters;
+  const { noMember, assignedToMe, noDates, overdue, dueNextDay, dueNextWeek, dueNextMonth, low, medium, high, markComplete, markNotComplete,keyword } = filters;
   const { workspaceId } = useParams();
   const [IsEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedTask, setSelectedTask] = useState(null)
   const [users, setUsers] = useState([]);
   const [fileList, setFileList] = useState([]);
+  const [submitfileList, setSubmitFileList] = useState([]);
   let isRemovingFile = false; // Biến cờ để theo dõi việc xóa file
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [file, setFile] = useState(null);
@@ -85,6 +86,13 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         else {
           setFileList([])
         }
+        if (response.data?.submit_files?.length > 0) {
+          setSubmitFileList(response.data.submit_files)
+        }
+        else {
+          setSubmitFileList([])
+        }
+        
         console.log(fileList);
         // Reset các trường trong form
         form.resetFields();
@@ -177,10 +185,11 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         if (markNotComplete) {
           status = false
         }
+        
         // Thêm logic để query API với deadline
         const allTasks = await Promise.all(
           stages.map((stage) =>
-            GetAllTasks(stage.id, assignee_ids, collaborator_ids, deadline_from, deadline_to, priotiry, status).catch(() => [])
+            GetAllTasks(stage.id, assignee_ids, collaborator_ids, deadline_from, deadline_to, priotiry, status,keyword).catch(() => [])
           ) // Trả về mảng rỗng nếu API lỗi
         );
 
@@ -193,7 +202,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
           const stageTasks = allTasks[index].data;
           // Gắn tasks vào object tasks
           stageTasks.forEach((task) => {
-            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority, description: task.description, assignee_ids: task.assignee_ids, collaborator_ids: task.collaborator_ids };
+            tasks[task.id] = { id: task.id, title: task.title, deadline: task.deadline, priority: task.priority, description: task.description, assignee_ids: task.assignee_ids, collaborator_ids: task.collaborator_ids,status:task.status };
           });
 
           // Gắn cột vào object columns
@@ -215,7 +224,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
     };
 
     fetchWorkspaceDetails();
-  }, [workspaceId, noDates, dueNextDay, low, medium, high, markComplete, dueNextWeek, dueNextMonth, markNotComplete, noMember, assignedToMe, overdue]);
+  }, [workspaceId, noDates, dueNextDay, low, medium, high, markComplete, dueNextWeek, dueNextMonth, markNotComplete, noMember, assignedToMe, overdue,keyword]);
 
   useEffect(() => {
     console.log("Danh sách người dùng đã thay đổi:", users);
@@ -389,6 +398,13 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
     else {
       setFileList([])
     }
+    if (response.data?.submit_files?.length > 0) {
+      setSubmitFileList(response.data.submit_files)
+    }
+    else {
+      setSubmitFileList([])
+    }
+    
     console.log(fileList);
     // Reset các trường trong form
     form.resetFields();
@@ -403,6 +419,36 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
       priority: response.data.priority,
       attachment: response.data.files
     });
+  };
+  
+  const handleUploadSubmitFile = async (info) => {
+    // Kiểm tra xem có phải là sự kiện xóa file không
+
+
+
+    const { file } = info;
+
+    // Kiểm tra nếu file đã được tải lên thành công
+
+    const response = await CreateFile({ file: file, from: "submit_file" });
+    if (response.message === "Success") {
+      const fileId = response.data.id;
+
+      // Cập nhật fileList với file mới
+      setSubmitFileList(prevFileList => {
+        // Đảm bảo prevFileList là một mảng
+        const currentFileList = Array.isArray(prevFileList) ? prevFileList : [];
+        const updatedFileList = [
+          ...currentFileList,
+          { id: fileId, url: response.data?.path } // Thêm file mới vào fileList
+        ];
+
+        // Gọi API để cập nhật task với file mới
+        PatchTask({ id: selectedTask.id, submit_file_ids: updatedFileList.map(file => file.id) }); // Gọi API ở đây
+
+        return updatedFileList; // Trả về fileList đã cập nhật
+      });
+    }
   };
   const handleUploadChange = async (info) => {
     // Kiểm tra xem có phải là sự kiện xóa file không
@@ -453,6 +499,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
     // Fetch comments for the task
     setTaskId(taskId);
     setFileList([]);
+ 
     setFilePreviews(null);
     setFileNames([]);
     setCommentText("")
@@ -653,6 +700,25 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
               beforeUpload={() => false}
             >
               <Button disabled={userRole === role.RoleTeacher} icon={<UploadOutlined />}>Click to Upload</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item name="submit_file" label="Upload Submit File" >
+            <Upload
+
+              //onChange={handleUploadSubmitFile}
+              fileList={submitfileList?.map(file => ({
+                uid: file.id,
+                name: file.id,
+                status: 'done',
+                url: file.url,
+                onRemove: (file) => {
+                  handleRemoveFile(file); // Gọi hàm xóa file
+                  return false; // Trả về false để ngăn chặn onChange
+                },
+              }))}
+              beforeUpload={() => false}
+            >
+              <Button icon={<UploadOutlined />}>Click to Upload</Button>
             </Upload>
           </Form.Item>
         </Form>

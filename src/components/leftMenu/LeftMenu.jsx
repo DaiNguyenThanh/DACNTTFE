@@ -95,9 +95,12 @@ const LeftMenu = () => {
     }, []);
     const fetchUsers = async () => {
         try {
-            const response = await GetUserAPI();
-            console.log(response.data.items)
-            setUsers(response.data.items);
+            if(userRole===role.RoleAdmin|| userRole===role.RoleSubjectManager){
+                const response = await GetUserAPI();
+                console.log(response.data.items)
+                setUsers(response.data.items);
+            }
+         
         } catch (error) {
             console.error("Lỗi khi lấy danh sách người dùng:", error);
         }
@@ -105,8 +108,10 @@ const LeftMenu = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
+                if(userRole===role.RoleAdmin|| userRole===role.RoleSubjectManager){
                 const response = await GetAllSubjectAPI();
                 setSubjects(response.data);
+                }
             } catch (error) {
                 console.error("Lỗi khi lấy danh sách môn học:", error);
             }
@@ -363,6 +368,7 @@ const LeftMenu = () => {
     const showEditModal = async (workspace) => {
         try {
             const response = await GetWorkSpace(workspace.id); // Gọi API để lấy chi tiết workspace
+            fetchUsers();
             if (response.error_code === 0) {
                 const { name, users, subjects, stages } = response.data; // Lấy thông tin từ response
                 workspaceform.setFieldsValue({
