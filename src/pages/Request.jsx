@@ -270,16 +270,22 @@ const RequestPage = () => {
                 attachmentId = attachmentIds; // Gán mảng ID file cho attachmentId
             }
             console.log(values.date)
-            const formattedDate =values.date.format('YYYY-MM-DD HH:mm:ss') ;
-            console.log(formattedDate)
+            // const formattedDate=moment.now()
+            // if(values.date){
+            //     formattedDate=values.date.format('YYYY-MM-DD HH:mm:ss') ;
+
+            // }else{
+            //     formattedDate=selectedTask.deadline
+            // }   
+           // console.log(formattedDate)
             const requestResponse = await CreateRequest({
                 attachment_ids: attachmentIds.length > 0 ? attachmentIds : undefined, // Chỉ thêm attachmentId nếu có
-                deadline: formattedDate,
+                deadline: values.type !== 'make-done' ? values.date.format('YYYY-MM-DD HH:mm:ss') :selectedTask.deadline,
                 reason: values.note,
                 task_id: values.task_id,
                 type: values.type,
                 workspace_id: values.workspace_id,
-                ...(values.type !== 'make-done' && { deadline: formattedDate })
+                ...(values.type !== 'make-done' && { deadline: values.date.format('YYYY-MM-DD HH:mm:ss') })
             });
             form.resetFields()
             console.log('Request created successfully:', requestResponse);

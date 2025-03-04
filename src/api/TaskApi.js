@@ -37,10 +37,10 @@ export const GetAllTasks = async (stage_id, assignee_ids, collaborator_ids, dead
         
         if (stage_id !== null && stage_id !== undefined) queryParams.append('stage_id', stage_id);
         if (assignee_ids !== null && assignee_ids !== undefined &&assignee_ids.lenth>0) queryParams.append('assignee_ids', assignee_ids);
-        if (deadline_from !== null && deadline_from !== undefined && deadline_from!=="") queryParams.append('deadline_from', deadline_from);
-        if (deadline_to !== null && deadline_to !== undefined && deadline_to!=="") queryParams.append('deadline_to', deadline_to);
+        // if (deadline_from !== null && deadline_from !== undefined && deadline_from!=="") queryParams.append('deadline_from', deadline_from);
+        // if (deadline_to !== null && deadline_to !== undefined && deadline_to!=="") queryParams.append('deadline_to', deadline_to);
         if (priority !== null && priority !== undefined && priority!=="") queryParams.append('priority', priority);
-        if (status !== null && status !== undefined) queryParams.append('status', status);
+        if (status !== null && status !== undefined && status!=="") queryParams.append('status', status);
         if (keyword !== null && keyword !== undefined&& keyword!=="") queryParams.append('keyword', keyword);
         const response = await axios.get(`${API_URL}/tasks/all?${queryParams.toString()}`);
         return response.data;
