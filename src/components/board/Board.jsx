@@ -702,9 +702,9 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
               <Button disabled={userRole === role.RoleTeacher} icon={<UploadOutlined />}>Click to Upload</Button>
             </Upload>
           </Form.Item>
-          <Form.Item name="submit_file" label="Upload Submit File" >
+          <Form.Item name="submit_file" label="Submit File" >
             <Upload
-
+              disabled={true}
               //onChange={handleUploadSubmitFile}
               fileList={submitfileList?.map(file => ({
                 uid: file.id,
@@ -718,7 +718,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
               }))}
               beforeUpload={() => false}
             >
-              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+             {/* <Button icon={<UploadOutlined />}>Click to Upload</Button> */}
             </Upload>
           </Form.Item>
         </Form>

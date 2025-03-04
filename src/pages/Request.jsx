@@ -473,8 +473,15 @@ const RequestPage = () => {
                             {requestDetail.type === "change-deadline" && (
   <p><strong>New Deadline:</strong> {requestDetail.Deadline}</p>
 )}
-
+                           
                             <p><strong>Created by:</strong> {requestDetail.user.name}</p>
+                            {(requestDetail.status === 'approved'||requestDetail.status === 'rejected')  &&
+                             (
+                                <p>
+                                    <strong>{requestDetail.status === 'approved' ? 'Approved by: ' : 'Rejected by: '}</strong> 
+                                    {requestDetail.approved_by?.name || requestDetail.rejected_by?.name || null}
+                                </p>
+                              )} 
                             <p><strong>Status:</strong> {<Badge count={requestDetail.status} style={{ backgroundColor: requestDetail.status === 'rejected' ? '#f5222d' : requestDetail.status === 'pending' ? '#faad14' : '#52c41a' }} />}</p>
                             <p><strong>Created At:</strong> {moment(requestDetail.created_at).format('DD/MM/YYYY HH:mm')}</p>
                             <p><strong>Attachments:</strong></p> <Upload showUploadList={true}  fileList={requestDetail?.files?.map(file => ({
