@@ -129,7 +129,7 @@ const App = ({ filters, showHistoryDrawer, taskID }) => {
         let deadline_from = moment();
         let deadline_to = moment();
         let priotiry = "";
-        const status = false;
+        const status = "";
         const assignee_ids = [];
         const collaborator_ids = [];
         if (noMember) {
